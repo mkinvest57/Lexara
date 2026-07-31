@@ -78,7 +78,7 @@ export default function StatsScreen() {
         <View style={styles.activityCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>7 derniers jours</Text>
-            <Text style={styles.cardLink}>La Méthode Immerli</Text>
+            <Text style={styles.cardLink}>La Méthode YAPRO</Text>
           </View>
           <GoalRow label="Mots lus" value={recentWords} goal={readGoal * 7} />
           <GoalRow label="Temps d’étude" value={minutes} goal={product.profile.dailyMinutes * 7} suffix=" min" />

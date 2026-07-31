@@ -161,7 +161,7 @@ export default function StatsPage() {
         </section>
         <section className="mt-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
-            La méthode Immerli
+            La méthode YAPRO
           </p>
           <h2 className="mt-4 text-xl font-bold">{details.label}</h2>
           <p className="mt-2 max-w-3xl leading-7 text-slate-600">

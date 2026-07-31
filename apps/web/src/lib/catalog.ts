@@ -320,7 +320,7 @@ export function getLessonsForLanguage(targetLangCode: string = 'en', baseLang: B
     lessons.push({
       id: `${code}-auth-${idx + 1}`,
       title: story.title,
-      collection: `Immerli ${story.kind}s · ${langName} ${flag}`,
+      collection: `YAPRO ${story.kind}s · ${langName} ${flag}`,
       language: code,
       level: story.level,
       kind: story.kind,
@@ -343,7 +343,7 @@ export function getLessonsForLanguage(targetLangCode: string = 'en', baseLang: B
       lessons.push({
         id: `${code}-lesson-${i}`,
         title: template.makeTitle(i, knd, flag),
-        collection: `Immerli ${knd}s · ${langName} ${flag}`,
+        collection: `YAPRO ${knd}s · ${langName} ${flag}`,
         language: code,
         level: lvl,
         kind: knd,
@@ -356,7 +356,7 @@ export function getLessonsForLanguage(targetLangCode: string = 'en', baseLang: B
       lessons.push({
         id: `${code}-lesson-${i}`,
         title: `${i}. ${knd} : Leçon ${langName} ${flag}`,
-        collection: `Immerli ${knd}s · ${langName} ${flag}`,
+        collection: `YAPRO ${knd}s · ${langName} ${flag}`,
         language: code,
         level: lvl,
         kind: knd,

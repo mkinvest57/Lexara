@@ -116,7 +116,7 @@ export default function OnboardingScreen() {
               <View style={styles.brandMark}>
                 <SymbolView name="text.book.closed.fill" tintColor="#FFFFFF" size={25} />
               </View>
-              <Text style={styles.brandName}>Immerli</Text>
+              <Text style={styles.brandName}>YAPRO</Text>
             </View>
             <View style={styles.welcomeBottom}>
               <Text style={styles.welcomeTitle}>Apprenez des langues avec du contenu que vous aimez</Text>

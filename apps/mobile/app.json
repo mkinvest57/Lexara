@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "Immerli",
-    "slug": "immerli",
+    "name": "YAPRO",
+    "slug": "yapro",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/immerli-icon.png",
-    "scheme": "immerli",
+    "scheme": "yapro",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F8FBFA",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.immerli.app"
+      "bundleIdentifier": "com.yapro.app"
     },
     "android": {
-      "package": "com.immerli.app",
+      "package": "com.yapro.app",
       "adaptiveIcon": {
         "backgroundColor": "#063F40",
         "foregroundImage": "./assets/images/immerli-icon.png",

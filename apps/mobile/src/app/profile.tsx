@@ -50,7 +50,7 @@ export default function ProfileScreen() {
         <View style={styles.streakPill}>
           <Text style={styles.streakPillText}>🔥 {product.currentStreak} jours de série</Text>
         </View>
-        <Text style={styles.accountStatus}>Profil local Immerli</Text>
+        <Text style={styles.accountStatus}>Profil local YAPRO</Text>
 
         <View style={styles.languageCard}>
           <View style={styles.languageIcon}>

@@ -187,7 +187,7 @@ export default function ProfilePage() {
                   ) : (
                     <>
                       <h2 className="truncate text-lg font-bold">{profile.name}</h2>
-                      <p className="mt-1 text-sm text-slate-500">Compte local Immerli</p>
+                      <p className="mt-1 text-sm text-slate-500">Compte local YAPRO</p>
                     </>
                   )}
                 </div>

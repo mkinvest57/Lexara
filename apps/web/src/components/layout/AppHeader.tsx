@@ -43,7 +43,7 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-50 flex h-[72px] items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
       <div className="flex items-center gap-4">
-        <Link href="/library" aria-label="Ouvrir la bibliothèque Immerli">
+        <Link href="/library" aria-label="Ouvrir la bibliothèque YAPRO">
           <BrandMark />
         </Link>
       </div>

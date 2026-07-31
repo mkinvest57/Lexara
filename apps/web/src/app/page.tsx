@@ -118,8 +118,7 @@ export default function HomePage() {
             Learn inside the things you love.
           </h2>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            Immerli turns authentic content into a calm, interactive learning space—so curiosity
-            does the heavy lifting.
+            YAPRO et son système d'immersion transforment le contenu authentique en un espace d'apprentissage interactif dans plus de 50 langues.
           </p>
         </div>
         <div className="mt-14 grid gap-5 md:grid-cols-3">
@@ -145,7 +144,7 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-[1240px] items-center gap-14 px-5 sm:px-8 lg:grid-cols-[.8fr_1.2fr]">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-700">
-              The Immerli reader
+              Le lecteur interactif YAPRO
             </p>
             <h2 className="mt-4 font-display text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
               Never leave the page to understand it.
@@ -226,7 +225,7 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-[1240px] flex-col gap-6 px-5 py-10 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <BrandMark />
           <p>Read deeply. Listen closely. Speak naturally.</p>
-          <p>© {new Date().getFullYear()} Immerli</p>
+          <p>© {new Date().getFullYear()} YAPRO</p>
         </div>
       </footer>
     </main>

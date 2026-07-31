@@ -98,7 +98,7 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-[#f1f3f4]">
-      <h1 className="sr-only">Bibliothèque Immerli</h1>
+      <h1 className="sr-only">Bibliothèque YAPRO</h1>
       <section className="sticky top-[72px] z-30 border-b border-slate-300 bg-[#eef0f1]/95 shadow-sm backdrop-blur-xl">
         <div className="flex min-h-[64px] items-center gap-3 px-4 sm:px-6 lg:px-8">
           <label className="relative w-full max-w-[420px]">

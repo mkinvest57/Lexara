@@ -63,7 +63,7 @@ export default function CoachScreen() {
             <SymbolView name="xmark" tintColor={productTheme.ink} size={20} />
           </Pressable>
           <View style={styles.headerCopy}>
-            <Text style={styles.headerTitle}>Coach Immerli</Text>
+            <Text style={styles.headerTitle}>Coach YAPRO</Text>
             <Text style={styles.headerMeta}>Coach local · vos données restent sur l’appareil</Text>
           </View>
           <View style={styles.headerButton}>
@@ -127,7 +127,7 @@ export default function CoachScreen() {
 
         <View style={styles.composer}>
           <TextInput
-            accessibilityLabel="Message pour le coach Immerli"
+            accessibilityLabel="Message pour le coach YAPRO"
             placeholder="Message au coach…"
             placeholderTextColor={productTheme.mutedLight}
             value={input}

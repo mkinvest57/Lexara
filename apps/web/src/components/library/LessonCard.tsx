@@ -41,7 +41,7 @@ export function LessonCard({
             className="object-cover transition duration-500 group-hover:scale-[1.03]"
           />
           <span className="absolute left-3 top-3 rounded-full border-2 border-white bg-[#0b1c2d]/85 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
-            Immerli
+            YAPRO
           </span>
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-black/50 px-3 py-2 text-xs font-semibold text-white backdrop-blur-sm">
             <span className="flex items-center gap-1.5">

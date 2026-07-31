@@ -93,7 +93,7 @@ export default function VocabPage() {
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'immerli-vocabulaire.csv';
+    anchor.download = 'yapro-vocabulaire.csv';
     anchor.click();
     URL.revokeObjectURL(url);
   };

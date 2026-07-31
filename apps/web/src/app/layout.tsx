@@ -9,11 +9,11 @@ const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfa
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: {
-    default: 'Immerli — Learn languages inside the stories you love',
-    template: '%s · Immerli',
+    default: 'YAPRO — Apprenez des langues par l\'immersion',
+    template: '%s · YAPRO',
   },
   description:
-    'Read and listen to content you care about, understand every word in context, and remember vocabulary naturally.',
+    'Lisez et écoutez du contenu dans plus de 50 langues, comprenez chaque mot dans son contexte et progressez naturellement avec YAPRO.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

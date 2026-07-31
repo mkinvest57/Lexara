@@ -68,7 +68,7 @@ export default function LoginPage() {
           </div>
         </div>
         <p className="relative text-sm text-teal-100/60">
-          Immerli · Read deeply, remember naturally.
+          YAPRO · Apprenez des langues naturellement par l'immersion.
         </p>
       </aside>
       <div className="flex items-center justify-center px-5 py-12 sm:px-10">
@@ -80,19 +80,19 @@ export default function LoginPage() {
           </div>
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-teal-700">
-              Welcome back
+              Bienvenue
             </p>
             <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight">
-              Continue learning
+              Continuer l'apprentissage
             </h1>
             <p className="mt-2 text-slate-600">
-              Sign in to open your library and saved vocabulary.
+              Connectez-vous pour ouvrir votre bibliothèque et votre vocabulaire.
             </p>
           </div>
           <Card className="border-slate-200 shadow-[0_20px_70px_rgba(15,23,42,.08)]">
             <CardHeader>
-              <CardTitle>Log in</CardTitle>
-              <CardDescription>Use your Immerli account details.</CardDescription>
+              <CardTitle>Connexion</CardTitle>
+              <CardDescription>Utilisez vos identifiants YAPRO.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -107,14 +107,14 @@ export default function LoginPage() {
                     id="email"
                     type="email"
                     autoComplete="email"
-                    placeholder="you@example.com"
+                    placeholder="vous@exemple.com"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Mot de passe</Label>
                   <Input
                     id="password"
                     type="password"
@@ -127,17 +127,17 @@ export default function LoginPage() {
                 </div>
                 <Button type="submit" className="min-h-11 w-full gap-2" disabled={loading}>
                   {loading ? (
-                    'Logging in…'
+                    'Connexion…'
                   ) : (
                     <>
-                      Log in <ArrowRight className="h-4 w-4" />
+                      Se connecter <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </Button>
                 <p className="text-center text-sm text-slate-600">
-                  New to Immerli?{' '}
+                  Nouveau sur YAPRO ?{' '}
                   <Link href="/signup" className="font-semibold text-teal-800 hover:underline">
-                    Create an account
+                    Créer un compte
                   </Link>
                 </p>
               </form>

@@ -168,7 +168,7 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Écouter un aperçu de la voix"
                   onPress={() =>
-                    speakEnglish('Welcome to Immerli. Read, listen, and learn naturally.', {
+                    speakEnglish('Welcome to YAPRO. Read, listen, and learn naturally.', {
                       rate: product.preferences.speechRate,
                     })
                   }

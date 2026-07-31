@@ -17,7 +17,7 @@ export function BrandMark({ compact = false, inverse = false }: BrandMarkProps) 
       </span>
       {!compact && (
         <span className={`font-display text-xl font-semibold tracking-[-0.025em] ${inverse ? 'text-white' : 'text-slate-950'}`}>
-          Immerli
+          YAPRO
         </span>
       )}
     </span>
