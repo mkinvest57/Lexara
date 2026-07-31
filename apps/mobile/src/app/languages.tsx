@@ -7,6 +7,71 @@ import { productTheme } from '@/constants/product-theme';
 
 const levels = ['Débutant 1', 'Débutant 2', 'Intermédiaire', 'Avancé'] as const;
 
+export interface LanguageItem {
+  id: string;
+  name: string;
+  flag: string;
+  count?: number;
+}
+
+export const mainLanguages: LanguageItem[] = [
+  { id: 'en', name: 'anglais', flag: '🇬🇧', count: 45 },
+  { id: 'fr', name: 'français', flag: '🇫🇷' },
+  { id: 'es', name: 'espagnol', flag: '🇪🇸' },
+  { id: 'de', name: 'allemand', flag: '🇩🇪' },
+  { id: 'it', name: 'italien', flag: '🇮🇹' },
+  { id: 'pt', name: 'portugais', flag: '🇵🇹' },
+  { id: 'ru', name: 'russe', flag: '🇷🇺' },
+  { id: 'ja', name: 'japonais', flag: '🇯🇵' },
+  { id: 'zh-sim', name: 'Chinois (Simplifié)', flag: '🇨🇳' },
+  { id: 'zh-trad', name: 'Chinois (Traditionnel)', flag: '🇹🇼' },
+  { id: 'ko', name: 'coréen', flag: '🇰🇷' },
+  { id: 'ar', name: 'arabe', flag: '🇸🇦' },
+  { id: 'nl', name: 'néerlandais', flag: '🇳🇱' },
+  { id: 'pl', name: 'polonais', flag: '🇵🇱' },
+  { id: 'sv', name: 'suédois', flag: '🇸🇪' },
+  { id: 'no', name: 'norvégien', flag: '🇳🇴' },
+  { id: 'fi', name: 'finnois', flag: '🇫🇮' },
+  { id: 'da', name: 'danois', flag: '🇩🇰' },
+  { id: 'el', name: 'grec', flag: '🇬🇷' },
+  { id: 'tr', name: 'turc', flag: '🇹🇷' },
+  { id: 'uk', name: 'ukrainien', flag: '🇺🇦' },
+  { id: 'ro', name: 'roumain', flag: '🇷🇴' },
+  { id: 'sk', name: 'slovaque', flag: '🇸🇰' },
+];
+
+export const extraLanguages: LanguageItem[] = [
+  { id: 'la', name: 'latin (SPQR)', flag: '🏛️' },
+  { id: 'eo', name: 'espéranto', flag: '⭐️' },
+  { id: 'yue', name: 'Cantonais', flag: '🇭🇰' },
+  { id: 'fa', name: 'Farsi', flag: '🇮🇷' },
+  { id: 'af', name: 'afrikaans', flag: '🇿🇦' },
+  { id: 'hy', name: 'arménien', flag: '🇦🇲' },
+  { id: 'be', name: 'biélorusse', flag: '🇧🇾' },
+  { id: 'bg', name: 'bulgare', flag: '🇧🇬' },
+  { id: 'ca', name: 'catalan', flag: '🏴' },
+  { id: 'hr', name: 'croate', flag: '🇭🇷' },
+  { id: 'gu', name: 'goudjarati', flag: '🇮🇳' },
+  { id: 'ka', name: 'géorgien', flag: '🇬🇪' },
+  { id: 'hi', name: 'hindi', flag: '🇮🇳' },
+  { id: 'hu', name: 'hongrois', flag: '🇭🇺' },
+  { id: 'id', name: 'indonésien', flag: '🇮🇩' },
+  { id: 'ga', name: 'irlandais', flag: '🇮🇪' },
+  { id: 'is', name: 'islandais', flag: '🇮🇸' },
+  { id: 'km', name: 'khmer', flag: '🇰🇭' },
+  { id: 'mk', name: 'macédonien', flag: '🇲🇰' },
+  { id: 'ms', name: 'malais', flag: '🇲🇾' },
+  { id: 'ur', name: 'ourdou', flag: '🇵🇰' },
+  { id: 'pa', name: 'pendjabi', flag: '🇮🇳' },
+  { id: 'sr', name: 'serbe', flag: '🇷🇸' },
+  { id: 'sl', name: 'slovène', flag: '🇸🇮' },
+  { id: 'sw', name: 'swahili', flag: '🇰🇪' },
+  { id: 'tl', name: 'tagalog', flag: '🇵🇭' },
+  { id: 'cs', name: 'tchèque', flag: '🇨🇿' },
+  { id: 'th', name: 'thaï', flag: '🇹🇭' },
+  { id: 'vi', name: 'vietnamien', flag: '🇻🇳' },
+];
+
 export default function LanguagesScreen() {
   const product = useProduct();
 
@@ -25,11 +90,11 @@ export default function LanguagesScreen() {
         <Text style={styles.sectionTitle}>LANGUE ACTIVE</Text>
         <View style={styles.languageCard}>
           <View style={styles.languageIcon}>
-            <SymbolView name="globe.europe.africa.fill" tintColor="#FFFFFF" size={25} />
+            <Text style={styles.flagEmoji}>🇬🇧</Text>
           </View>
           <View style={styles.languageCopy}>
             <Text style={styles.languageName}>anglais</Text>
-            <Text style={styles.languageMeta}>{product.profile.level}</Text>
+            <Text style={styles.languageMeta}>{product.profile.level} · 45 leçons explorées</Text>
           </View>
           <View style={styles.activeBadge}>
             <Text style={styles.activeText}>Active</Text>
@@ -68,14 +133,45 @@ export default function LanguagesScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>PLUS DE LANGUES</Text>
-        <View style={styles.unavailableCard}>
-          <SymbolView name="lock.fill" tintColor={productTheme.muted} size={21} />
-          <View style={styles.unavailableCopy}>
-            <Text style={styles.unavailableTitle}>Le catalogue anglais est prêt</Text>
-            <Text style={styles.unavailableText}>
-              Les autres catalogues seront activés lorsqu’ils disposeront de leçons, traductions et audio validés.
-            </Text>
-          </View>
+        <View style={styles.languageListGroup}>
+          {mainLanguages.map((item, index) => (
+            <Pressable
+              key={item.id}
+              onPress={() => {
+                if (item.id === 'en') router.back();
+              }}
+              style={[
+                styles.languageListItem,
+                index === mainLanguages.length - 1 && styles.noBorder,
+              ]}>
+              <View style={styles.smallFlagIcon}>
+                <Text style={styles.smallFlagEmoji}>{item.flag}</Text>
+              </View>
+              <Text style={styles.languageListLabel}>{item.name}</Text>
+              {item.count ? <Text style={styles.languageCount}>({item.count})</Text> : null}
+              <SymbolView name="chevron.right" tintColor={productTheme.muted} size={16} />
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={styles.sectionTitle}>ENCORE PLUS DE LANGUES (BETA)</Text>
+        <View style={styles.languageListGroup}>
+          {extraLanguages.map((item, index) => (
+            <Pressable
+              key={item.id}
+              style={[
+                styles.languageListItem,
+                index === extraLanguages.length - 1 && styles.noBorder,
+              ]}>
+              <View style={styles.smallFlagIcon}>
+                <Text style={styles.smallFlagEmoji}>{item.flag}</Text>
+              </View>
+              <Text style={styles.languageListLabel}>{item.name}</Text>
+              <View style={styles.betaBadge}>
+                <Text style={styles.betaBadgeText}>Beta</Text>
+              </View>
+            </Pressable>
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -143,6 +239,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  flagEmoji: {
+    fontSize: 26,
+  },
   languageCopy: {
     minWidth: 0,
     flex: 1,
@@ -176,7 +275,7 @@ const styles = StyleSheet.create({
     backgroundColor: productTheme.surface,
   },
   levelRow: {
-    minHeight: 59,
+    minHeight: 55,
     paddingHorizontal: 15,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: productTheme.line,
@@ -209,27 +308,54 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: productTheme.ink,
   },
-  unavailableCard: {
-    padding: 16,
+  languageListGroup: {
+    overflow: 'hidden',
     borderRadius: 15,
     backgroundColor: productTheme.surface,
+  },
+  languageListItem: {
+    minHeight: 52,
+    paddingHorizontal: 15,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: productTheme.line,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 12,
   },
-  unavailableCopy: {
-    minWidth: 0,
-    flex: 1,
+  noBorder: {
+    borderBottomWidth: 0,
   },
-  unavailableTitle: {
-    fontSize: 14,
-    fontWeight: '800',
+  smallFlagIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: productTheme.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  smallFlagEmoji: {
+    fontSize: 18,
+  },
+  languageListLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
     color: productTheme.ink,
   },
-  unavailableText: {
-    marginTop: 5,
-    fontSize: 12,
-    lineHeight: 18,
+  languageCount: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: productTheme.muted,
+  },
+  betaBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    backgroundColor: productTheme.background,
+  },
+  betaBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
     color: productTheme.muted,
   },
 });

@@ -48,6 +48,7 @@ export type LessonProgress = {
 
 export type LearnerProfile = {
   displayName: string;
+  name?: string;
   targetLanguage: 'en';
   targetLanguageLabel: string;
   level: 'Débutant 1' | 'Débutant 2' | 'Intermédiaire' | 'Avancé';
@@ -298,6 +299,9 @@ type ProductContextValue = ProductState & {
   ): void;
   updatePreferences(input: Partial<ProductPreferences>): void;
   resetOnboarding(): void;
+  playlist: string[];
+  removeFromPlaylist(id: string): void;
+  stats: { wordsRead: number; streakDays: number };
   dueVocabulary: VocabularyEntry[];
   knownWords: number;
   totalWordsRead: number;
@@ -461,6 +465,9 @@ export function ProductStoreProvider({ children }: PropsWithChildren) {
         dispatch({ type: 'setVocabularyStatus', payload: { id, status } }),
       gradeReview: (id, grade) => dispatch({ type: 'gradeReview', payload: { id, grade } }),
       togglePlaylist: (id) => dispatch({ type: 'togglePlaylist', payload: id }),
+      removeFromPlaylist: (id) => dispatch({ type: 'togglePlaylist', payload: id }),
+      playlist: state.playlistIds,
+      stats: { wordsRead: totalWordsRead, streakDays: state.currentStreak },
       updateLessonProgress,
       updatePreferences: (input) => dispatch({ type: 'updatePreference', payload: input }),
       resetOnboarding: () => dispatch({ type: 'resetOnboarding' }),

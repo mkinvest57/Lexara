@@ -1,96 +1,114 @@
+import { useState } from 'react';
 import { router } from 'expo-router';
-import { Image } from 'expo-image';
-import { SymbolView } from '@/components/symbol-view';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BottomTabs } from '@/components/bottom-tabs';
-import { formatDuration } from '@/lib/catalog';
-import { getLessonCover } from '@/lib/lesson-covers';
-import { useProduct } from '@/lib/product-store';
+import { SymbolView } from '@/components/symbol-view';
 import { productTheme } from '@/constants/product-theme';
+import { useProduct } from '@/lib/product-store';
 
 export default function PlaylistScreen() {
   const product = useProduct();
-  const lessons = product.playlistIds
-    .map((id) => product.lessons.find((lesson) => lesson.id === id))
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+
+  const playlistLessons = product.playlist
+    .map((id) => product.lessons.find((item) => item.id === id))
     .filter(Boolean);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Liste de lecture</Text>
-          <Text style={styles.subtitle}>{lessons.length} leçons enregistrées</Text>
+        <View style={styles.headerTitleRow}>
+          <View style={styles.playlistBadgeIcon}>
+            <SymbolView name="music.note.list" tintColor="#FFFFFF" size={20} />
+          </View>
+          <View style={styles.headerTitles}>
+            <Text style={styles.headerTitle}>Active Playlist</Text>
+            <Pressable onPress={() => router.push('/')} style={styles.changeRow}>
+              <Text style={styles.changeText}>Changer de Playlist</Text>
+              <SymbolView name="chevron.right" tintColor={productTheme.muted} size={13} />
+            </Pressable>
+          </View>
         </View>
-        <Pressable
-          accessibilityLabel="Chercher une leçon"
-          onPress={() => router.push('/library')}
-          style={styles.headerButton}>
-          <SymbolView name="plus" tintColor={productTheme.ink} size={21} />
+        <Pressable onPress={() => setShowOptions(!showOptions)} style={styles.headerButton}>
+          <SymbolView name="ellipsis" tintColor={productTheme.ink} size={20} />
         </Pressable>
       </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {lessons.length ? (
-          <>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Démarrer la liste de lecture"
-              onPress={() =>
-                router.push({ pathname: '/lesson/[id]', params: { id: lessons[0]!.id } })
-              }
-              style={styles.startButton}>
-              <SymbolView name="play.fill" tintColor="#FFFFFF" size={16} />
-              <Text style={styles.startText}>Démarrer</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setIsPlaying(!isPlaying)}
+          style={styles.primaryPlayButton}>
+          <SymbolView
+            name={isPlaying ? 'pause.fill' : 'play.fill'}
+            tintColor="#FFFFFF"
+            size={18}
+          />
+          <Text style={styles.primaryPlayText}>
+            {isPlaying ? 'Mettre en pause' : 'Démarrer'}
+          </Text>
+        </Pressable>
+
+        {showOptions ? (
+          <View style={styles.optionsSheet}>
+            <Text style={styles.optionsSheetTitle}>Modifier la playlist</Text>
+            <Pressable style={styles.optionRow}>
+              <SymbolView name="arrow.down.circle" tintColor={productTheme.ink} size={20} />
+              <Text style={styles.optionText}>Télécharger les leçons</Text>
             </Pressable>
-            <View style={styles.list}>
-              {lessons.map((lesson, index) =>
-                lesson ? (
-                  <Pressable
-                    key={lesson.id}
-                    onPress={() =>
-                      router.push({ pathname: '/lesson/[id]', params: { id: lesson.id } })
-                    }
-                    style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-                    <Text style={styles.order}>{index + 1}</Text>
-                    <Image
-                      source={getLessonCover(lesson.id)}
-                      contentFit="cover"
-                      contentPosition={lesson.imagePosition as never}
-                      style={styles.image}
-                    />
-                    <View style={styles.rowCopy}>
-                      <Text numberOfLines={2} style={styles.rowTitle}>{lesson.title}</Text>
-                      <Text style={styles.rowMeta}>
-                        {lesson.level} · {formatDuration(lesson.durationSeconds)}
-                      </Text>
-                    </View>
-                    <Pressable
-                      accessibilityLabel={`Retirer ${lesson.title} de la liste`}
-                      onPress={() => product.togglePlaylist(lesson.id)}
-                      style={styles.removeButton}>
-                      <SymbolView name="xmark.circle.fill" tintColor={productTheme.mutedLight} size={21} />
-                    </Pressable>
-                  </Pressable>
-                ) : null,
-              )}
-            </View>
-          </>
-        ) : (
-          <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <SymbolView name="list.bullet.rectangle" tintColor="#C8CDD4" size={50} />
-            </View>
-            <Text style={styles.emptyTitle}>Votre liste de lecture est vide</Text>
-            <Text style={styles.emptyCopy}>
-              Ajoutez une leçon depuis la bibliothèque, puis lancez votre session ici.
+            <Pressable style={styles.optionRow}>
+              <SymbolView name="nosign" tintColor={productTheme.ink} size={20} />
+              <Text style={styles.optionText}>Désactiver les téléchargements</Text>
+            </Pressable>
+            <Pressable style={styles.optionRow}>
+              <SymbolView name="trash" tintColor={productTheme.red} size={20} />
+              <Text style={[styles.optionText, { color: productTheme.red }]}>
+                Supprimer les fichiers: 430 ko
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        <Text style={styles.sectionTitle}>Pistes ({playlistLessons.length})</Text>
+        {!playlistLessons.length ? (
+          <View style={styles.emptyCard}>
+            <SymbolView name="music.note" tintColor={productTheme.muted} size={32} />
+            <Text style={styles.emptyTitle}>Votre playlist est vide</Text>
+            <Text style={styles.emptyText}>
+              Ajoutez des leçons depuis la bibliothèque pour les écouter en continu.
             </Text>
-            <Pressable onPress={() => router.push('/')} style={styles.emptyButton}>
-              <Text style={styles.emptyButtonText}>Explorer la bibliothèque</Text>
-            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.trackList}>
+            {playlistLessons.map((lesson, index) => (
+              <Pressable
+                key={lesson!.id}
+                onPress={() => router.push(`/lesson/${lesson!.id}`)}
+                style={[
+                  styles.trackRow,
+                  index === playlistLessons.length - 1 && styles.noBorder,
+                ]}>
+                <View style={styles.trackIndexBox}>
+                  <Text style={styles.trackIndexText}>{index + 1}</Text>
+                </View>
+                <View style={styles.trackInfo}>
+                  <Text style={styles.trackTitle}>{lesson!.title}</Text>
+                  <Text style={styles.trackMeta}>
+                    {Math.floor((lesson!.durationSeconds || 120) / 60)}:
+                    {String((lesson!.durationSeconds || 120) % 60).padStart(2, '0')} · 0,0x écoutes
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => product.removeFromPlaylist(lesson!.id)}
+                  style={styles.trackOption}>
+                  <SymbolView name="ellipsis" tintColor={productTheme.muted} size={18} />
+                </Pressable>
+              </Pressable>
+            ))}
           </View>
         )}
       </ScrollView>
-      <BottomTabs active="playlist" />
     </SafeAreaView>
   );
 }
@@ -98,144 +116,172 @@ export default function PlaylistScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: productTheme.surface,
+    backgroundColor: productTheme.background,
   },
   header: {
-    minHeight: 82,
-    paddingHorizontal: 18,
+    minHeight: 64,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: {
-    fontSize: 26,
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  playlistBadgeIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: productTheme.green,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitles: {
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 22,
     fontWeight: '900',
     color: productTheme.ink,
   },
-  subtitle: {
-    marginTop: 3,
-    fontSize: 12,
+  changeRow: {
+    marginTop: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  changeText: {
+    fontSize: 13,
+    fontWeight: '700',
     color: productTheme.muted,
   },
   headerButton: {
-    width: 44,
-    height: 44,
-    borderWidth: 1,
-    borderColor: productTheme.line,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: productTheme.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
     paddingHorizontal: 16,
-    paddingBottom: 116,
+    paddingBottom: 80,
   },
-  startButton: {
-    width: 132,
-    minHeight: 46,
-    borderRadius: 8,
+  primaryPlayButton: {
+    minHeight: 48,
+    marginTop: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     backgroundColor: productTheme.green,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  startText: {
+  primaryPlayText: {
     fontSize: 15,
     fontWeight: '800',
     color: '#FFFFFF',
   },
-  list: {
-    marginTop: 18,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: productTheme.lineSoft,
-    borderRadius: 16,
-  },
-  row: {
-    minHeight: 104,
-    padding: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: productTheme.line,
+  optionsSheet: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 15,
     backgroundColor: productTheme.surface,
+    gap: 12,
+  },
+  optionsSheetTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: productTheme.muted,
+    marginBottom: 4,
+  },
+  optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
+    paddingVertical: 6,
   },
-  order: {
-    width: 20,
+  optionText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: productTheme.ink,
+  },
+  sectionTitle: {
+    marginTop: 24,
+    marginBottom: 10,
     fontSize: 12,
     fontWeight: '800',
     color: productTheme.muted,
-    textAlign: 'center',
   },
-  image: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-    backgroundColor: productTheme.ink,
-  },
-  rowCopy: {
-    minWidth: 0,
-    flex: 1,
-  },
-  rowTitle: {
-    fontSize: 15,
-    lineHeight: 19,
-    fontWeight: '800',
-    color: productTheme.ink,
-  },
-  rowMeta: {
-    marginTop: 7,
-    fontSize: 11,
-    color: productTheme.muted,
-  },
-  removeButton: {
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  empty: {
-    marginTop: 100,
-    alignItems: 'center',
-  },
-  emptyIcon: {
-    width: 120,
-    height: 100,
-    borderRadius: 30,
-    backgroundColor: productTheme.background,
+  emptyCard: {
+    padding: 30,
+    borderRadius: 15,
+    backgroundColor: productTheme.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyTitle: {
-    marginTop: 22,
-    fontSize: 22,
-    fontWeight: '900',
+    marginTop: 12,
+    fontSize: 18,
+    fontWeight: '800',
     color: productTheme.ink,
   },
-  emptyCopy: {
-    marginTop: 8,
-    maxWidth: 310,
-    fontSize: 14,
-    lineHeight: 21,
+  emptyText: {
+    marginTop: 6,
+    fontSize: 13,
     color: productTheme.muted,
     textAlign: 'center',
   },
-  emptyButton: {
-    minHeight: 48,
-    marginTop: 22,
-    paddingHorizontal: 18,
-    borderRadius: 9,
-    backgroundColor: productTheme.green,
+  trackList: {
+    borderRadius: 15,
+    backgroundColor: productTheme.surface,
+    overflow: 'hidden',
+  },
+  trackRow: {
+    minHeight: 62,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: productTheme.line,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  noBorder: {
+    borderBottomWidth: 0,
+  },
+  trackIndexBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: productTheme.background,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyButtonText: {
-    fontSize: 14,
+  trackIndexText: {
+    fontSize: 12,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: productTheme.muted,
   },
-  pressed: {
-    opacity: 0.68,
+  trackInfo: {
+    flex: 1,
+  },
+  trackTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: productTheme.ink,
+  },
+  trackMeta: {
+    marginTop: 3,
+    fontSize: 12,
+    color: productTheme.muted,
+  },
+  trackOption: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
