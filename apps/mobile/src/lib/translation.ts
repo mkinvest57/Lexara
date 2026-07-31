@@ -25,17 +25,17 @@ function selectTranslation(data: MyMemoryResponse, original: string) {
   return different?.text || candidates[0]?.text || original;
 }
 
-export async function translateEnglishToFrench(text: string) {
+export async function translateText(text: string, sourceLang: string = 'en', targetLang: string = 'fr') {
   const cleanText = text.trim();
   if (!cleanText) return '';
 
   const normalized = normalizeWord(cleanText);
-  if (normalized && normalized === cleanText.toLocaleLowerCase()) {
+  if (normalized && sourceLang === 'en' && targetLang === 'fr') {
     const local = dictionary[normalized]?.translation;
     if (local) return local;
   }
 
-  const key = cleanText.toLocaleLowerCase();
+  const key = `${sourceLang}:${targetLang}:${cleanText.toLocaleLowerCase()}`;
   const cached = translationCache.get(key);
   if (cached) return cached;
 
@@ -43,8 +43,9 @@ export async function translateEnglishToFrench(text: string) {
   const timeout = setTimeout(() => controller.abort(), 8_000);
   try {
     const query = encodeURIComponent(cleanText.slice(0, 480));
+    const langpair = `${sourceLang.split('-')[0]}|${targetLang.split('-')[0]}`;
     const response = await fetch(
-      `https://api.mymemory.translated.net/get?q=${query}&langpair=en|fr`,
+      `https://api.mymemory.translated.net/get?q=${query}&langpair=${langpair}`,
       { signal: controller.signal },
     );
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -58,4 +59,8 @@ export async function translateEnglishToFrench(text: string) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function translateEnglishToFrench(text: string, sourceLang: string = 'en', targetLang: string = 'fr') {
+  return translateText(text, sourceLang, targetLang);
 }

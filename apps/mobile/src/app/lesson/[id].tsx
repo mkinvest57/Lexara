@@ -189,7 +189,11 @@ export default function LessonScreen() {
 
     if (immediateTranslation) return;
     try {
-      const translated = await translateEnglishToFrench(token.normalized);
+      const translated = await translateEnglishToFrench(
+        token.normalized,
+        lesson?.language || product.profile.targetLanguage || 'en',
+        'fr',
+      );
       if (translationRequestRef.current === request) setTranslation(translated);
     } catch {
       if (translationRequestRef.current === request) {
