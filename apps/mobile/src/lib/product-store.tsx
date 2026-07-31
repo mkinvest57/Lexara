@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { createEmptyCard, fsrs, Rating, type Card } from 'ts-fsrs';
-import { dictionary, getWordCount, normalizeWord, seedLessons, type Lesson, type LessonLevel } from './catalog';
+import { dictionary, getLessonsForLanguage, getWordCount, normalizeWord, seedLessons, type Lesson, type LessonLevel } from './catalog';
 import { productStorage } from './storage';
 
 const STORAGE_KEY = 'immerli.product.v2';
@@ -49,7 +49,7 @@ export type LessonProgress = {
 export type LearnerProfile = {
   displayName: string;
   name?: string;
-  targetLanguage: 'en';
+  targetLanguage: string;
   targetLanguageLabel: string;
   level: 'Débutant 1' | 'Débutant 2' | 'Intermédiaire' | 'Avancé';
   dailyMinutes: number;
@@ -185,12 +185,21 @@ function reducer(state: ProductState, action: Action): ProductState {
   switch (action.type) {
     case 'hydrate':
       return { ...action.payload, hydrated: true };
-    case 'finishOnboarding':
+    case 'finishOnboarding': {
+      const newProfile = { ...state.profile, ...action.payload };
+      const langChanged = Boolean(
+        action.payload.targetLanguage && action.payload.targetLanguage !== state.profile.targetLanguage,
+      );
+      const lessons = langChanged
+        ? getLessonsForLanguage(newProfile.targetLanguage)
+        : state.lessons;
       return {
         ...state,
         onboardingCompleted: true,
-        profile: { ...state.profile, ...action.payload },
+        profile: newProfile,
+        lessons,
       };
+    }
     case 'addLesson':
       return { ...state, lessons: [action.payload, ...state.lessons] };
     case 'saveWord': {

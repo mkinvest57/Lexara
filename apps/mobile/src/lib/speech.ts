@@ -1,73 +1,73 @@
 import * as Speech from 'expo-speech';
 import type { SpeechOptions, Voice } from 'expo-speech';
 
-const DEFAULT_LANGUAGE = 'en-US';
-const preferredVoiceNames = [
-  'ava',
-  'aria',
-  'jenny',
-  'samantha',
-  'serena',
-  'daniel',
-  'guy',
-  'google us english',
-  'google uk english female',
-  'microsoft',
-];
-const noveltyVoiceNames = ['bad news', 'bells', 'bubbles', 'cellos', 'whisper', 'zarvox'];
+const langCodeMap: Record<string, string> = {
+  en: 'en-US',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  de: 'de-DE',
+  it: 'it-IT',
+  pt: 'pt-PT',
+  ru: 'ru-RU',
+  ja: 'ja-JP',
+  zh: 'zh-CN',
+  'zh-sim': 'zh-CN',
+  'zh-trad': 'zh-TW',
+  ko: 'ko-KR',
+  ar: 'ar-SA',
+  nl: 'nl-NL',
+  pl: 'pl-PL',
+  sv: 'sv-SE',
+  no: 'nb-NO',
+  fi: 'fi-FI',
+  da: 'da-DK',
+  el: 'el-GR',
+  tr: 'tr-TR',
+  uk: 'uk-UA',
+  ro: 'ro-RO',
+  sk: 'sk-SK',
+  la: 'la',
+  eo: 'eo',
+};
 
-let voicePromise: Promise<Voice | undefined> | undefined;
 let speechRequest = 0;
 
-function scoreVoice(voice: Voice) {
-  const language = voice.language.toLocaleLowerCase();
-  const name = voice.name.toLocaleLowerCase();
-  let score = 0;
-
-  if (language === 'en-us') score += 500;
-  else if (language.startsWith('en-')) score += 300;
-  if (voice.quality === Speech.VoiceQuality.Enhanced) score += 240;
-  if (/natural|neural|premium|enhanced/.test(name)) score += 120;
-
-  const preferredIndex = preferredVoiceNames.findIndex((candidate) => name.includes(candidate));
-  if (preferredIndex >= 0) score += 100 - preferredIndex * 4;
-  if (noveltyVoiceNames.some((candidate) => name.includes(candidate))) score -= 500;
-
-  return score;
-}
-
-export async function getPreferredEnglishVoice() {
-  if (!voicePromise) {
-    voicePromise = Speech.getAvailableVoicesAsync()
-      .then((voices) =>
-        voices
-          .filter((voice) => voice.language.toLocaleLowerCase().startsWith('en'))
-          .sort((left, right) => scoreVoice(right) - scoreVoice(left))[0],
-      )
-      .catch(() => undefined);
+export async function getVoiceForLanguage(langCode: string = 'en'): Promise<Voice | undefined> {
+  try {
+    const voices = await Speech.getAvailableVoicesAsync();
+    const prefix = langCode.split('-')[0].toLowerCase();
+    return voices.find((v) => v.language.toLowerCase().startsWith(prefix));
+  } catch {
+    return undefined;
   }
-  return voicePromise;
 }
 
-export type SpeakEnglishOptions = Pick<
+export async function getPreferredEnglishVoice(): Promise<Voice | undefined> {
+  return getVoiceForLanguage('en');
+}
+
+export type SpeakOptions = Pick<
   SpeechOptions,
   'onBoundary' | 'onDone' | 'onError' | 'onStart' | 'onStopped'
 > & {
   rate?: number;
+  language?: string;
 };
 
-export async function speakEnglish(text: string, options: SpeakEnglishOptions = {}) {
+export async function speakLanguage(text: string, langCode: string = 'en', options: SpeakOptions = {}) {
   const cleanText = text.trim();
   if (!cleanText) return;
 
   const request = ++speechRequest;
   await Speech.stop();
-  const voice = await getPreferredEnglishVoice();
+  const voice = await getVoiceForLanguage(langCode);
   if (request !== speechRequest) return;
 
+  const defaultLang = langCodeMap[langCode] || `${langCode}-${langCode.toUpperCase()}`;
   const isCurrent = () => request === speechRequest;
+
   Speech.speak(cleanText, {
-    language: voice?.language || DEFAULT_LANGUAGE,
+    language: voice?.language || defaultLang,
     voice: voice?.identifier,
     rate: options.rate ?? 0.9,
     pitch: 1,
@@ -87,12 +87,15 @@ export async function speakEnglish(text: string, options: SpeakEnglishOptions = 
   });
 }
 
-export async function speakSlow(text: string, options: SpeakEnglishOptions = {}) {
-  return speakEnglish(text, { ...options, rate: 0.55 });
+export async function speakEnglish(text: string, options: SpeakOptions = {}) {
+  return speakLanguage(text, options.language || 'en', options);
+}
+
+export async function speakSlow(text: string, options: SpeakOptions = {}) {
+  return speakLanguage(text, options.language || 'en', { ...options, rate: 0.55 });
 }
 
 export async function stopSpeech() {
   speechRequest += 1;
   await Speech.stop();
 }
-

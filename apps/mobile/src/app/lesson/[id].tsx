@@ -86,6 +86,7 @@ export default function LessonScreen() {
     setAudioLoading(true);
     try {
       await speakEnglish(lesson.content, {
+        language: lesson.language || product.profile.targetLanguage || 'en',
         rate: product.preferences.speechRate,
         onStart: () => {
           setAudioLoading(false);
