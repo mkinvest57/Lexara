@@ -272,6 +272,17 @@ export default function LessonScreen() {
         </View>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Aimer cette leçon"
+          onPress={() => product.toggleLikeLesson(lesson.id)}
+          style={styles.topButton}>
+          <SymbolView
+            name={product.likedLessonIds.includes(lesson.id) ? 'heart.fill' : 'heart'}
+            tintColor={product.likedLessonIds.includes(lesson.id) ? productTheme.red : productTheme.ink}
+            size={20}
+          />
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Ouvrir les options de la leçon"
           onPress={() => setMenuOpen(true)}
           style={styles.topButton}>

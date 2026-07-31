@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { createEmptyCard, fsrs, Rating, type Card } from 'ts-fsrs';
-import { dictionary, getWordCount, normalizeWord, seedLessons, type Lesson } from './catalog';
+import { dictionary, getWordCount, normalizeWord, seedLessons, type Lesson, type LessonLevel } from './catalog';
 import { productStorage } from './storage';
 
 const STORAGE_KEY = 'immerli.product.v2';
@@ -73,6 +73,7 @@ type ProductState = {
   lessons: Lesson[];
   vocabulary: VocabularyEntry[];
   playlistIds: string[];
+  likedLessonIds: string[];
   progress: Record<string, LessonProgress>;
   preferences: ProductPreferences;
   activityDates: string[];
@@ -90,6 +91,7 @@ type Action =
   | { type: 'setVocabularyStatus'; payload: { id: string; status: VocabularyStatus } }
   | { type: 'gradeReview'; payload: { id: string; grade: 'again' | 'hard' | 'good' } }
   | { type: 'togglePlaylist'; payload: string }
+  | { type: 'toggleLikeLesson'; payload: string }
   | { type: 'updateProgress'; payload: LessonProgress }
   | { type: 'updatePreference'; payload: Partial<ProductPreferences> }
   | { type: 'resetOnboarding' };
@@ -108,6 +110,7 @@ const defaultPersistedState: PersistedState = {
   lessons: seedLessons,
   vocabulary: [],
   playlistIds: [],
+  likedLessonIds: [],
   progress: {},
   preferences: {
     autoplayAudio: false,
@@ -261,6 +264,14 @@ function reducer(state: ProductState, action: Action): ProductState {
           ? state.playlistIds.filter((id) => id !== action.payload)
           : [...state.playlistIds, action.payload],
       };
+    case 'toggleLikeLesson':
+      const currentLiked = state.likedLessonIds ?? [];
+      return {
+        ...state,
+        likedLessonIds: currentLiked.includes(action.payload)
+          ? currentLiked.filter((id) => id !== action.payload)
+          : [...currentLiked, action.payload],
+      };
     case 'updateProgress':
       const activity = recordActivity(state);
       return {
@@ -287,8 +298,10 @@ function reducer(state: ProductState, action: Action): ProductState {
 }
 
 type ProductContextValue = ProductState & {
+  likedLessonIds: string[];
+  toggleLikeLesson(id: string): void;
   finishOnboarding(profile: Partial<LearnerProfile>): void;
-  importLesson(input: { title: string; content: string; sourceUrl?: string }): Lesson;
+  importLesson(input: { title: string; content: string; level?: string; sourceUrl?: string }): Lesson;
   saveWord(input: { term: string; translation?: string; context: string; lessonId: string }): void;
   setVocabularyStatus(id: string, status: VocabularyStatus): void;
   gradeReview(id: string, grade: 'again' | 'hard' | 'good'): void;
@@ -354,21 +367,13 @@ export function ProductStoreProvider({ children }: PropsWithChildren) {
   }, []);
 
   const importLesson = useCallback(
-    ({
-      title,
-      content,
-      sourceUrl,
-    }: {
-      title: string;
-      content: string;
-      sourceUrl?: string;
-    }) => {
+    ({ title, content, level, sourceUrl }: { title: string; content: string; level?: string; sourceUrl?: string }) => {
       const lesson: Lesson = {
         id: `imported-${Date.now()}`,
         title: title.trim(),
         collection: 'Mes leçons importées',
         language: 'en',
-        level: state.profile.level,
+        level: (level as LessonLevel) || state.profile.level,
         kind: 'Cours',
         content: content.trim(),
         durationSeconds: Math.max(20, Math.round(getWordCount(content) / 2.5)),
@@ -458,6 +463,8 @@ export function ProductStoreProvider({ children }: PropsWithChildren) {
   const value = useMemo<ProductContextValue>(
     () => ({
       ...state,
+      likedLessonIds: state.likedLessonIds ?? [],
+      toggleLikeLesson: (id) => dispatch({ type: 'toggleLikeLesson', payload: id }),
       finishOnboarding: (profile) => dispatch({ type: 'finishOnboarding', payload: profile }),
       importLesson,
       saveWord,

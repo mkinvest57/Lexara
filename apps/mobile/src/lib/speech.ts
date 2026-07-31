@@ -87,6 +87,10 @@ export async function speakEnglish(text: string, options: SpeakEnglishOptions = 
   });
 }
 
+export async function speakSlow(text: string, options: SpeakEnglishOptions = {}) {
+  return speakEnglish(text, { ...options, rate: 0.55 });
+}
+
 export async function stopSpeech() {
   speechRequest += 1;
   await Speech.stop();
