@@ -38,13 +38,32 @@ export default function WordsScreen() {
           </View>
           <Text style={styles.title}>Vocabulaire</Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Trouver une leçon pour ajouter du vocabulaire"
-          onPress={() => router.push('/library')}
-          style={styles.headerButton}>
-          <SymbolView name="plus" tintColor={productTheme.ink} size={20} />
-        </Pressable>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Exporter le vocabulaire"
+            onPress={() => {
+              const csvContent = 'Term,Translation,Context,Status\n' +
+                product.vocabulary.map((w) => `"${w.term}","${w.translation}","${w.context.replace(/"/g, '""')}",${w.status}`).join('\n');
+              if (typeof window !== 'undefined' && window.document) {
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'lexara-vocabulary.csv';
+                link.click();
+              }
+            }}
+            style={styles.headerButton}>
+            <SymbolView name="square.and.arrow.up" tintColor={productTheme.ink} size={19} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Trouver une leçon pour ajouter du vocabulaire"
+            onPress={() => router.push('/library')}
+            style={styles.headerButton}>
+            <SymbolView name="plus" tintColor={productTheme.ink} size={20} />
+          </Pressable>
+        </View>
       </View>
       <View style={styles.search}>
         <SymbolView name="magnifyingglass" tintColor={productTheme.muted} size={18} />
