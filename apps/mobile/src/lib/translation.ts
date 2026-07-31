@@ -19,9 +19,10 @@ function selectTranslation(data: MyMemoryResponse, original: string) {
     .filter((candidate) => candidate.text)
     .sort((left, right) => right.score - left.score);
 
-  return candidates.find(
+  const different = candidates.find(
     (candidate) => candidate.text.toLocaleLowerCase() !== original.toLocaleLowerCase(),
-  )?.text;
+  );
+  return different?.text || candidates[0]?.text || original;
 }
 
 export async function translateEnglishToFrench(text: string) {
@@ -51,6 +52,9 @@ export async function translateEnglishToFrench(text: string) {
     if (!translation) throw new Error('missing-translation');
     translationCache.set(key, translation);
     return translation;
+  } catch {
+    const fallback = (normalized && dictionary[normalized]?.translation) || cleanText;
+    return fallback;
   } finally {
     clearTimeout(timeout);
   }

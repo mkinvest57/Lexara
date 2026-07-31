@@ -117,6 +117,8 @@ export default function ReviewScreen() {
     );
   }
 
+  if (!card) return <View style={styles.screen} />;
+
   const progress = (index + (revealed ? 0.7 : 0.2)) / cards.length;
 
   return (

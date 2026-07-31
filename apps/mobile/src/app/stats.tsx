@@ -13,12 +13,13 @@ export default function StatsScreen() {
   const now = new Date();
   const todayKey = now.toISOString().slice(0, 10);
   const weekStart = new Date(now);
-  const dayFromMonday = (weekStart.getUTCDay() + 6) % 7;
-  weekStart.setUTCDate(weekStart.getUTCDate() - dayFromMonday);
+  const dayFromMonday = (now.getDay() + 6) % 7;
+  weekStart.setDate(now.getDate() - dayFromMonday);
   const week = weekLabels.map((label, index) => {
     const date = new Date(weekStart);
-    date.setUTCDate(weekStart.getUTCDate() + index);
-    return { label, key: date.toISOString().slice(0, 10) };
+    date.setDate(weekStart.getDate() + index);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return { label, key };
   });
   const recentCutoff = Date.now() - 7 * 86_400_000;
   const recentProgress = Object.values(product.progress).filter(
@@ -35,12 +36,13 @@ export default function StatsScreen() {
     recentProgress.reduce((sum, item) => sum + (item.listenedSeconds ?? 0), 0) / 60,
   );
   const progress = Math.min(1, todayWords / Math.max(1, readGoal));
-  const levelCode = {
+  const levelCodeMap: Record<string, string> = {
     'Débutant 1': 'A1',
     'Débutant 2': 'A2',
     Intermédiaire: 'B1',
     Avancé: 'B2',
-  }[product.profile.level];
+  };
+  const levelCode = levelCodeMap[product.profile.level] ?? 'A1';
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
