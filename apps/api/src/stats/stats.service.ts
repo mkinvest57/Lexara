@@ -53,7 +53,7 @@ export class StatsService {
         },
       }),
 
-      // Total LingQs
+      // Total saved vocabulary entries
       this.prisma.vocabEntry.count({
         where: {
           userId,

@@ -1,0 +1,11 @@
+-- Compatibility pointer for reviewers who expect supabase/schema.sql.
+--
+-- The executable, versioned schema is the migration below. Keeping one SQL
+-- source of truth prevents the dashboard bootstrap script and migration history
+-- from drifting apart.
+--
+--   supabase/migrations/20260730105621_bootstrap_immerli_product.sql
+--
+-- Apply locally with `supabase db reset` (Docker required), or apply the
+-- migration to the confirmed hosted project through the normal Supabase
+-- migration workflow. Do not paste this pointer into the SQL editor.

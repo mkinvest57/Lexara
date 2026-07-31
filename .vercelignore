@@ -1,0 +1,24 @@
+# Local secrets and databases must never enter a deployment bundle.
+**/.env
+**/.env.*
+!**/.env.example
+**/.envrc
+**/*.pem
+**/*.key
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+apps/api/prisma/*.db-shm
+apps/api/prisma/*.db-wal
+apps/api/prisma/*.sqlite*
+
+# Design research and local-only prototype artifacts are not required by Next.js.
+screens/
+screens APP Phone/
+prototypes/
+.claude/
+.vercel/
+.turbo/
+supabase/.branches/
+supabase/.temp/
+supabase/tests/
+**/*.log

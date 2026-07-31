@@ -2,44 +2,68 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BarChart3, BookMarked, BookOpen, Brain, FilePlus2, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { BookOpen, Home, BookMarked, Brain, BarChart3 } from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Library', href: '/library', icon: BookOpen },
-  { name: 'Vocabulary', href: '/vocab', icon: BookMarked },
-  { name: 'Review', href: '/review', icon: Brain },
+  { name: 'Bibliothèque', shortName: 'Bibliothèque', href: '/library', icon: BookOpen },
+  { name: 'Importer une leçon', shortName: 'Importer', href: '/import', icon: FilePlus2 },
+  { name: 'Vocabulaire', shortName: 'Vocabulaire', href: '/vocab', icon: BookMarked },
+  { name: 'Réviser', shortName: 'Réviser', href: '/review', icon: Brain },
+  { name: 'Statistiques', shortName: 'Stats', href: '/stats', icon: BarChart3 },
+  { name: 'Configuration', shortName: 'Réglages', href: '/settings', icon: Settings },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ mobile = false }: { mobile?: boolean }) {
   const pathname = usePathname();
 
-  return (
-    <aside className="w-64 border-r bg-muted/30 p-4">
-      <div className="mb-8">
-        <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl">
-          <BookOpen className="h-6 w-6 text-primary" />
-          Lexara
-        </Link>
-      </div>
-
-      <nav className="space-y-1">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href;
+  if (mobile) {
+    return (
+      <nav
+        className="fixed inset-x-0 bottom-0 z-50 grid h-[68px] grid-cols-5 border-t border-slate-200 bg-white/95 px-2 backdrop-blur-xl md:hidden"
+        aria-label="Navigation mobile"
+      >
+        {navigation.slice(0, 5).map((item) => {
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
-              key={item.name}
+              key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                'flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold',
+                active ? 'text-[#246fcd]' : 'text-slate-500'
               )}
             >
-              <item.icon className="h-5 w-5" />
-              {item.name}
+              <item.icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
+              <span className="truncate">{item.shortName}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    );
+  }
+
+  return (
+    <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-20 shrink-0 border-r border-slate-200 bg-white md:block">
+      <nav
+        className="flex h-full flex-col items-center gap-1 px-2 py-4"
+        aria-label="Navigation principale"
+      >
+        {navigation.map((item) => {
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex min-h-[62px] w-full flex-col items-center justify-center gap-1.5 rounded-2xl px-1 text-center text-[10px] font-semibold leading-tight transition',
+                active ? 'bg-[#e7f5ff] text-[#246fcd]' : 'text-[#172333] hover:bg-slate-100'
+              )}
+              aria-current={active ? 'page' : undefined}
+              title={item.name}
+            >
+              <item.icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.5 : 2} />
+              <span className="w-full truncate">{item.shortName}</span>
             </Link>
           );
         })}

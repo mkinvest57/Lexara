@@ -37,8 +37,9 @@ export class VocabController {
   async translate(
     @Body('text') text: string,
     @Body('targetLang') targetLang: string,
+    @Body('sourceLang') sourceLang?: string,
     @Body('context') context?: string
   ) {
-    return this.translationService.translate(text, targetLang, context);
+    return this.translationService.translate(text, targetLang, sourceLang, context);
   }
 }

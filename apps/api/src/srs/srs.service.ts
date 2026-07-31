@@ -125,7 +125,18 @@ export class SrsService {
   /**
    * End a review session
    */
-  async endSession(sessionId: string, correctCount: number) {
+  async endSession(sessionId: string, userId: string, correctCount: number) {
+    const session = await this.prisma.reviewSession.findFirst({
+      where: {
+        id: sessionId,
+        userId,
+      },
+    });
+
+    if (!session) {
+      throw new Error('Review session not found');
+    }
+
     return this.prisma.reviewSession.update({
       where: { id: sessionId },
       data: {

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x *)",
+      "Bash(pnpm install *)",
+      "Bash(docker-compose up *)",
+      "Bash(docker compose up *)",
+      "Bash(pnpm prisma *)",
+      "Bash(pnpm prisma:seed *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm dev *)",
+      "Bash(curl -s http://localhost:3001/api/auth/login -X OPTIONS -I)",
+      "Bash(bash /Users/sashimi/.claude/skills/humanized-frontend/scripts/dna.sh edtech 2024)",
+      "Bash(curl -s http://localhost:3000 -I)",
+      "Bash(open *)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(pnpm run *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(pkill -f \"nest start\")",
+      "Bash(curl -s http://localhost:3002)"
+    ]
+  }
+}

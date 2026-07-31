@@ -8,11 +8,13 @@ import { LessonsModule } from './lessons/lessons.module';
 import { VocabModule } from './vocab/vocab.module';
 import { SrsModule } from './srs/srs.module';
 import { StatsModule } from './stats/stats.module';
+import { validateEnvironment } from './config/environment';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: validateEnvironment,
     }),
     PrismaModule,
     AuthModule,

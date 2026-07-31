@@ -3,18 +3,18 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: lingq-postgres
+    container_name: immerli-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: lingq
-      POSTGRES_PASSWORD: lingq_dev_password
-      POSTGRES_DB: lingq_dev
+      POSTGRES_USER: immerli
+      POSTGRES_PASSWORD: immerli_dev_password
+      POSTGRES_DB: immerli_dev
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U lingq']
+      test: ['CMD-SHELL', 'pg_isready -U immerli']
       interval: 10s
       timeout: 5s
       retries: 5

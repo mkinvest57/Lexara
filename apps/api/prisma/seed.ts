@@ -9,10 +9,10 @@ async function main() {
   // Create demo user
   const hashedPassword = await bcrypt.hash('demo123456', 10);
   const user = await prisma.user.upsert({
-    where: { email: 'demo@lexara.com' },
+    where: { email: 'demo@immerli.com' },
     update: {},
     create: {
-      email: 'demo@lexara.com',
+      email: 'demo@immerli.com',
       password: hashedPassword,
       name: 'Demo User',
     },
@@ -74,7 +74,7 @@ async function main() {
     {
       title: 'El Cambio Climático',
       content: `El cambio climático representa uno de los desafíos más significativos que enfrenta la humanidad en el siglo XXI. Los científicos han documentado un aumento constante en las temperaturas globales, atribuido principalmente a las emisiones de gases de efecto invernadero generadas por actividades humanas. Las consecuencias son evidentes: derretimiento acelerado de los glaciares, eventos climáticos extremos más frecuentes, y alteraciones en los ecosistemas. Muchos países han implementado políticas para reducir su huella de carbono, promoviendo energías renovables y tecnologías sostenibles. Sin embargo, la cooperación internacional sigue siendo fundamental para lograr cambios significativos. Los expertos advierten que el tiempo para actuar es limitado, y que las decisiones tomadas hoy determinarán el futuro del planeta para las próximas generaciones.`,
-      imageUrl: 'https://images.unsplash.com/photo-1569163139394-de4798aa62b4?w=400',
+      imageUrl: null,
     },
     {
       title: 'La Inteligencia Artificial',

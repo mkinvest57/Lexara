@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { ApplicationEnvironment } from '../config/environment';
 
 @Module({
   imports: [
@@ -14,10 +15,10 @@ import { LocalStrategy } from './strategies/local.strategy';
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_SECRET'),
+      useFactory: (config: ConfigService<ApplicationEnvironment, true>) => ({
+        secret: config.get('JWT_SECRET', { infer: true }),
         signOptions: {
-          expiresIn: config.get('JWT_EXPIRES_IN', '7d'),
+          expiresIn: config.get('JWT_EXPIRES_IN', { infer: true }),
         },
       }),
     }),

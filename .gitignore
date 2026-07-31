@@ -35,6 +35,7 @@ yarn-error.log*
 
 # Turborepo
 .turbo
+*.tsbuildinfo
 
 # IDEs
 .vscode/*
@@ -45,6 +46,8 @@ yarn-error.log*
 # Prisma
 prisma/migrations/*
 !prisma/migrations/.gitkeep
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
 
 # Docker
 docker-compose.override.yml

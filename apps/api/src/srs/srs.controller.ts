@@ -33,7 +33,11 @@ export class SrsController {
   }
 
   @Post('session/:id/end')
-  async endSession(@Param('id') id: string, @Body('correctCount') correctCount: number) {
-    return this.srsService.endSession(id, correctCount);
+  async endSession(
+    @Param('id') id: string,
+    @CurrentUser() user,
+    @Body('correctCount') correctCount: number
+  ) {
+    return this.srsService.endSession(id, user.userId, correctCount);
   }
 }

@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -76,7 +82,7 @@ export function WordModal({ word, sentence, onClose, onSave, token }: WordModalP
                 id="translation"
                 value={translation}
                 onChange={(e) => setTranslation(e.target.value)}
-                placeholder="Enter translation"
+                placeholder="Enter translation…"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !loading) {
@@ -99,7 +105,7 @@ export function WordModal({ word, sentence, onClose, onSave, token }: WordModalP
                 Saving...
               </>
             ) : (
-              'Save as LingQ'
+              'Save word'
             )}
           </Button>
         </DialogFooter>

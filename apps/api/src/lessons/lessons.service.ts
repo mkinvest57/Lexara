@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenizerService } from './tokenizer.service';
 
@@ -9,10 +9,13 @@ export class LessonsService {
     private tokenizerService: TokenizerService
   ) {}
 
-  async findAll(profileId: string, level?: string) {
+  async findAll(profileId: string, userId: string, level?: string) {
     return this.prisma.lesson.findMany({
       where: {
         profileId,
+        profile: {
+          userId,
+        },
         ...(level && { level }),
       },
       orderBy: {
@@ -39,6 +42,11 @@ export class LessonsService {
         },
       },
       include: {
+        profile: {
+          select: {
+            targetLanguage: true,
+          },
+        },
         sentences: {
           orderBy: { index: 'asc' },
           include: {
@@ -57,7 +65,14 @@ export class LessonsService {
     return lesson;
   }
 
-  async create(profileId: string, data: { title: string; content: string; type: string; level: string; imageUrl?: string; sourceUrl?: string }) {
+  async create(profileId: string, userId: string, data: { title: string; content: string; type: string; level: string; imageUrl?: string; sourceUrl?: string }) {
+    if (!data.title?.trim() || !data.content?.trim()) {
+      throw new BadRequestException('A title and lesson text are required');
+    }
+
+    const profile = await this.prisma.languageProfile.findFirst({ where: { id: profileId, userId } });
+    if (!profile) throw new NotFoundException('Language profile not found');
+
     const wordCount = this.tokenizerService.countWords(data.content);
     const sentences = this.tokenizerService.tokenizeText(data.content);
 

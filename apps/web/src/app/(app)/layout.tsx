@@ -1,32 +1,33 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    redirect('/login');
-  }
+  const pathname = usePathname();
+  const isReader = pathname.startsWith('/lesson/');
+  const isReviewSession = pathname.startsWith('/review/session');
 
   return (
-    <div className="min-h-screen flex">
-      <AppSidebar />
-      <div className="flex-1 flex flex-col">
-        <AppHeader />
-        <main className="flex-1 overflow-auto">{children}</main>
+    <div className="min-h-screen bg-[#f1f3f4] text-[#0b1c2d]">
+      <a
+        href="#main-content"
+        className="fixed left-4 top-3 z-[100] -translate-y-20 rounded-xl bg-[#0b1c2d] px-4 py-2 text-sm font-bold text-white transition-transform focus:translate-y-0"
+      >
+        Aller au contenu
+      </a>
+      {!isReviewSession && <AppHeader />}
+      <div className="flex min-h-[calc(100vh-72px)]">
+        {!isReader && !isReviewSession && <AppSidebar />}
+        <main
+          id="main-content"
+          className={`min-w-0 flex-1 ${!isReader && !isReviewSession ? 'pb-[68px] md:pb-0' : ''}`}
+        >
+          {children}
+        </main>
       </div>
+      {!isReader && !isReviewSession && <AppSidebar mobile />}
     </div>
   );
 }

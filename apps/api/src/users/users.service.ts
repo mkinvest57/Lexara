@@ -15,7 +15,15 @@ export class UsersService {
     }
 
     return this.prisma.user.create({
-      data,
+      data: {
+        ...data,
+        languageProfile: {
+          create: {
+            targetLanguage: 'es',
+            level: 'beginner',
+          },
+        },
+      },
     });
   }
 

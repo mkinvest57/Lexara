@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Immerli",
+    "slug": "immerli",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/immerli-icon.png",
+    "scheme": "immerli",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F8FBFA",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.immerli.app"
+    },
+    "android": {
+      "package": "com.immerli.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#063F40",
+        "foregroundImage": "./assets/images/immerli-icon.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": true
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/immerli-icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#063F40",
+          "image": "./assets/images/immerli-splash.png",
+          "imageWidth": 180,
+          "dark": {
+            "backgroundColor": "#041F21",
+            "image": "./assets/images/immerli-splash.png"
+          }
+        }
+      ],
+      "expo-sqlite"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    }
+  }
+}

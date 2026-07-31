@@ -1,8 +1,11 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === 'development' ? 'http://localhost:3001/api' : '');
 
 export interface ApiError {
   message: string;
   statusCode: number;
+  code?: 'API_UNAVAILABLE';
 }
 
 class ApiClient {
@@ -16,15 +19,41 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    if (!this.baseUrl) {
+      throw {
+        code: 'API_UNAVAILABLE',
+        message: 'La synchronisation distante Immerli n’est pas encore configurée.',
+        statusCode: 503,
+      } satisfies ApiError;
+    }
+
     const url = `${this.baseUrl}${endpoint}`;
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        ...options,
+        signal: options.signal || AbortSignal.timeout(10_000),
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+    } catch {
+      if (process.env.NODE_ENV === 'development') {
+        console.info('[api-client] local learning service unavailable', {
+          endpoint,
+          baseUrl: this.baseUrl,
+        });
+      }
+
+      throw {
+        code: 'API_UNAVAILABLE',
+        message: 'Immerli cannot reach the learning service. Please try again in a moment.',
+        statusCode: 503,
+      } satisfies ApiError;
+    }
 
     if (!response.ok) {
       const error: ApiError = await response.json().catch(() => ({
@@ -83,6 +112,14 @@ class ApiClient {
     });
   }
 
+  async createLesson(token: string, data: { profileId: string; title: string; content: string; type: string; level: string; sourceUrl?: string }) {
+    return this.request<any>('/lessons', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  }
+
   // Vocabulary
   async getVocab(token: string, status?: number) {
     const params = status !== undefined ? `?status=${status}` : '';
@@ -107,11 +144,17 @@ class ApiClient {
     });
   }
 
-  async translate(token: string, text: string, targetLang: string, context?: string) {
+  async translate(
+    token: string,
+    text: string,
+    targetLang: string,
+    context?: string,
+    sourceLang: string = 'es'
+  ) {
     return this.request<{ translatedText: string }>('/vocab/translate', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ text, targetLang, context }),
+      body: JSON.stringify({ text, targetLang, sourceLang, context }),
     });
   }
 

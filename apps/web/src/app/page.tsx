@@ -1,248 +1,234 @@
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowRight, BookOpen, Check, Headphones, Languages, Play, Sparkles } from 'lucide-react';
+import { BrandMark } from '@/components/brand/BrandMark';
+
+const benefits = [
+  {
+    icon: BookOpen,
+    title: 'Read what pulls you in',
+    copy: 'Open a short story, article, or transcript at your level. The lesson library grows with your interests.',
+  },
+  {
+    icon: Languages,
+    title: 'Understand every word',
+    copy: 'Tap unfamiliar words for an instant translation, keep the useful ones, and see them highlighted next time.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Remember without cramming',
+    copy: 'A lightweight review queue brings vocabulary back at the right moment, always in its original context.',
+  },
+];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className="sticky top-0 bg-[#F5F0E8] border-b-3 border-[#2D1810] z-50 backdrop-blur-sm bg-opacity-95">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-[#5D4037] rounded-full flex items-center justify-center text-[#F5F0E8] font-bold text-xl rotate-[-4deg]">
-              L
-            </div>
-            <span className="text-2xl font-display font-bold">Lexara</span>
+    <main className="min-h-screen bg-white text-slate-950">
+      <nav
+        className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl"
+        aria-label="Main navigation"
+      >
+        <div className="mx-auto flex h-[72px] max-w-[1240px] items-center justify-between px-5 sm:px-8">
+          <Link href="/" aria-label="Immerli home">
+            <BrandMark />
+          </Link>
+          <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
+            <a href="#how-it-works" className="transition-colors hover:text-teal-800">
+              How it works
+            </a>
+            <a href="#reader" className="transition-colors hover:text-teal-800">
+              The reader
+            </a>
+            <a href="#mobile" className="transition-colors hover:text-teal-800">
+              Mobile
+            </a>
           </div>
-          <div className="flex items-center gap-6">
-            <Link href="/login" className="text-[#2D1810] hover:text-[#5D4037] font-medium transition-colors">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/login"
+              className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 sm:px-4"
+            >
               Log in
             </Link>
-            <Link href="/signup">
-              <button className="btn-primary">
-                Try it free
-              </button>
+            <Link
+              href="/library"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 sm:px-5"
+            >
+              Ouvrir l’app <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 py-20 md:py-32">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <div className="inline-block bg-[#81C784] text-[#2D1810] px-4 py-2 rounded-md font-semibold text-sm rotate-[-1deg] shadow-[2px_2px_0px_#2D1810]">
-              No more boring drills →
+      <section className="relative isolate min-h-[720px] overflow-hidden bg-[#041f21]">
+        <Image
+          src="/brand/immerli-hero.png"
+          alt="Worlds of books, conversation, travel and culture connected through language"
+          fill
+          priority
+          className="object-cover object-[65%_center] opacity-95"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#041f21] via-[#041f21]/80 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#041f21] to-transparent" />
+        <div className="relative mx-auto flex min-h-[720px] max-w-[1240px] items-center px-5 py-24 sm:px-8">
+          <div className="max-w-[650px]">
+            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-teal-300/20 bg-teal-200/10 px-4 py-2 text-sm font-medium text-teal-100 backdrop-blur">
+              <Headphones className="h-4 w-4" /> Language learning that feels like living
             </div>
-
-            <h1 className="font-display font-bold text-[#2D1810] leading-tight">
-              Learn languages by reading what you <span className="text-[#5D4037] underline decoration-wavy decoration-[#81C784]">actually love</span>
+            <h1 className="font-display text-5xl font-semibold leading-[1.04] tracking-[-0.045em] text-white sm:text-6xl lg:text-[76px]">
+              Get lost in the story. Find your voice.
             </h1>
-
-            <p className="text-xl text-[#2D1810] opacity-80 leading-relaxed">
-              I tried Duolingo for 6 months. Got to level 12. Still couldn't order coffee in Barcelona.
-              Then I started reading Spanish articles about coffee roasting—my actual hobby—and everything clicked.
+            <p className="mt-7 max-w-xl text-lg leading-8 text-slate-200 sm:text-xl">
+              Learn Spanish through stories, conversations, and ideas you actually care about. Tap a
+              word, understand it, and keep moving.
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link href="/signup">
-                <button className="btn-primary">
-                  Start reading for free
-                </button>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/library"
+                className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-[#f2763a] px-7 py-4 font-semibold text-white shadow-[0_14px_36px_rgba(242,118,58,.25)] transition hover:-translate-y-0.5 hover:bg-[#df642d]"
+              >
+                Commencer à lire <ArrowRight className="h-5 w-5" />
               </Link>
-              <Link href="/login">
-                <button className="btn-secondary">
-                  See how it works
-                </button>
+              <Link
+                href="/import"
+                className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-7 py-4 font-semibold text-white backdrop-blur transition hover:bg-white/15"
+              >
+                <Play className="h-4 w-4 fill-current" /> Importer un texte
               </Link>
             </div>
-
-            <p className="text-sm text-[#2D1810] opacity-60">
-              ✓ 7 demo lessons included · ✓ No credit card · ✓ Works in your browser
-            </p>
-          </div>
-
-          {/* Collage of real objects - signature element */}
-          <div className="relative">
-            <div className="card rotate-slight-alt p-8 bg-white">
-              <div className="space-y-4">
-                <div className="bg-[#F5F0E8] p-6 rounded-lg border-2 border-[#2D1810]">
-                  <p className="text-lg font-medium mb-4">
-                    "María <span className="bg-[#81C784] px-2 py-1 rounded cursor-pointer hover:bg-[#5D4037] hover:text-white transition-colors">va</span> al <span className="bg-yellow-200 px-2 py-1 rounded">café</span> todos los días..."
-                  </p>
-                  <div className="text-sm opacity-70 italic">
-                    ← Click any word to learn it
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 pt-4">
-                  <div className="w-12 h-12 bg-[#5D4037] rounded-full flex items-center justify-center text-white font-bold">
-                    27
-                  </div>
-                  <div>
-                    <div className="font-semibold">Words saved today</div>
-                    <div className="text-sm opacity-70">3 day streak 🔥</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Decorative stamp */}
-            <div className="absolute -top-4 -right-4 bg-[#81C784] text-[#2D1810] w-24 h-24 rounded-full flex items-center justify-center font-display font-bold text-sm border-4 border-[#2D1810] rotate-12 shadow-lg">
-              NO<br/>DRILLS
+            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-300">
+              {['No credit card', 'Real reading context', 'Web and mobile'].map((label) => (
+                <span key={label} className="inline-flex items-center gap-2">
+                  <Check className="h-4 w-4 text-teal-300" />
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works - Bento Grid */}
-      <section className="bg-white border-y-3 border-[#2D1810] py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <h2 className="font-display font-bold text-center mb-4">
-            Three steps. That's it.
+      <section id="how-it-works" className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8 sm:py-32">
+        <div className="max-w-2xl">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-700">
+            A better loop
+          </p>
+          <h2 className="mt-4 font-display text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+            Learn inside the things you love.
           </h2>
-          <p className="text-center text-xl opacity-80 mb-12 max-w-2xl mx-auto">
-            No grammar tables. No multiple choice. Just you, interesting content, and words that stick.
+          <p className="mt-5 text-lg leading-8 text-slate-600">
+            Immerli turns authentic content into a calm, interactive learning space—so curiosity
+            does the heavy lifting.
           </p>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Step 1 */}
-            <div className="card rotate-slight bg-[#F5F0E8]">
-              <div className="text-5xl font-display font-bold text-[#5D4037] mb-4">01</div>
-              <h3 className="font-display font-bold mb-3">Pick what interests you</h3>
-              <p className="opacity-80">
-                Articles about cooking, tech news, YouTube videos, Netflix shows. Import anything or browse our library.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-white border-2 border-[#2D1810] rounded text-sm font-medium">🍕 Food</span>
-                <span className="px-3 py-1 bg-white border-2 border-[#2D1810] rounded text-sm font-medium">💻 Tech</span>
-                <span className="px-3 py-1 bg-white border-2 border-[#2D1810] rounded text-sm font-medium">⚽ Sports</span>
+        </div>
+        <div className="mt-14 grid gap-5 md:grid-cols-3">
+          {benefits.map(({ icon: Icon, title, copy }, index) => (
+            <article
+              key={title}
+              className="rounded-[28px] border border-slate-200 bg-[#f7fbfa] p-7 transition hover:-translate-y-1 hover:border-teal-200 hover:shadow-[0_20px_60px_rgba(15,118,110,.09)]"
+            >
+              <div className="flex items-center justify-between">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-teal-700 text-white">
+                  <Icon className="h-6 w-6" />
+                </span>
+                <span className="text-sm font-bold text-slate-400">0{index + 1}</span>
               </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="card bg-[#81C784]">
-              <div className="text-5xl font-display font-bold text-[#2D1810] mb-4">02</div>
-              <h3 className="font-display font-bold mb-3">Click words you don't know</h3>
-              <p className="opacity-90">
-                Every word is clickable. See translation + example. Save it. It'll stay highlighted in every future lesson.
-              </p>
-              <div className="mt-6 p-4 bg-white rounded-lg border-2 border-[#2D1810]">
-                <div className="text-sm font-mono">
-                  café → <span className="font-bold">coffee</span><br/>
-                  <span className="text-xs opacity-70">"Va al café todos los días"</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="card rotate-slight-alt bg-[#5D4037] text-[#F5F0E8]">
-              <div className="text-5xl font-display font-bold mb-4">03</div>
-              <h3 className="font-display font-bold mb-3">Review when you forget</h3>
-              <p className="opacity-90">
-                Flashcards appear at smart intervals. 1 day, 3 days, 7 days... Science-backed spacing so words stick for good.
-              </p>
-              <div className="mt-6 text-center py-4">
-                <div className="text-4xl font-display font-bold">café</div>
-                <div className="mt-4 flex gap-3 justify-center">
-                  <button className="px-4 py-2 bg-white text-[#2D1810] rounded-md font-semibold text-sm hover:bg-[#81C784] transition-colors">
-                    ✓ I know
-                  </button>
-                  <button className="px-4 py-2 bg-[#F5F0E8] text-[#2D1810] rounded-md font-semibold text-sm hover:bg-white transition-colors">
-                    ✗ Show me
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+              <h3 className="mt-8 text-xl font-semibold tracking-tight">{title}</h3>
+              <p className="mt-3 leading-7 text-slate-600">{copy}</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      {/* Real Story Section */}
-      <section className="max-w-7xl mx-auto px-6 py-20">
-        <div className="card bg-[#F5F0E8] max-w-3xl mx-auto text-center">
-          <div className="text-6xl mb-6">💬</div>
-          <blockquote className="text-2xl font-display font-bold mb-6 leading-snug">
-            "I learned more Spanish in 2 weeks reading tech blogs than in 3 months of Duolingo."
-          </blockquote>
-          <p className="opacity-80 mb-4">
-            That's from Alex, a developer who tried Lexara while learning about React... in Spanish.
-            He's now reading Spanish docs daily and his team noticed.
-          </p>
-          <div className="mt-8 pt-8 border-t-2 border-[#2D1810]">
-            <p className="text-sm opacity-70">
-              Real person. Real result. We asked permission to share this. (Most reviews are fake. This one isn't.)
+      <section id="reader" className="overflow-hidden bg-[#ecf8f5] py-24 sm:py-32">
+        <div className="mx-auto grid max-w-[1240px] items-center gap-14 px-5 sm:px-8 lg:grid-cols-[.8fr_1.2fr]">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-700">
+              The Immerli reader
             </p>
+            <h2 className="mt-4 font-display text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+              Never leave the page to understand it.
+            </h2>
+            <p className="mt-5 text-lg leading-8 text-slate-600">
+              Select a word and its meaning appears alongside the sentence. Save it with one tap,
+              then return to the story without losing your place.
+            </p>
+            <Link
+              href="/library"
+              className="mt-8 inline-flex items-center gap-2 font-semibold text-teal-800 hover:text-teal-950"
+            >
+              Essayer le lecteur interactif <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="overflow-hidden rounded-[30px] border border-teal-950/10 bg-white shadow-[0_28px_80px_rgba(4,47,46,.18)]">
+            <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-4">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#f2763a]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+              <span className="h-2.5 w-2.5 rounded-full bg-teal-400" />
+              <span className="ml-3 text-xs font-medium text-slate-400">Una tarde en Madrid</span>
+            </div>
+            <div className="grid min-h-[390px] md:grid-cols-[1fr_250px]">
+              <div className="p-7 sm:p-10">
+                <p className="font-display text-2xl font-semibold">Una tarde en Madrid</p>
+                <p className="mt-7 font-serif text-[19px] leading-10 text-slate-700">
+                  Clara salió de casa cuando la ciudad empezaba a despertar. En la esquina, el
+                  panadero ya había abierto y el{' '}
+                  <span className="rounded-md bg-amber-200 px-1.5 py-1">aroma</span> del pan llenaba
+                  la calle. Caminó sin prisa hacia el{' '}
+                  <span className="rounded-md bg-sky-200 px-1.5 py-1 ring-2 ring-sky-400">
+                    mercado
+                  </span>
+                  .
+                </p>
+              </div>
+              <aside className="border-l border-slate-200 bg-slate-50 p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Selected word
+                </p>
+                <p className="mt-3 text-2xl font-semibold">mercado</p>
+                <p className="mt-1 text-sm text-slate-500">noun · Spanish</p>
+                <div className="mt-5 rounded-xl border border-teal-200 bg-white p-4">
+                  <p className="text-xs font-semibold text-teal-700">Meaning</p>
+                  <p className="mt-1 font-medium">market</p>
+                </div>
+                <button className="mt-4 min-h-11 w-full rounded-xl bg-teal-700 px-4 font-semibold text-white">
+                  Save word
+                </button>
+              </aside>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="bg-[#81C784] border-y-3 border-[#2D1810] py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-12 text-center">
-            <div>
-              <div className="text-6xl font-display font-bold text-[#2D1810] mb-2">500+</div>
-              <div className="text-xl font-medium">Words saved by demo users</div>
-            </div>
-            <div>
-              <div className="text-6xl font-display font-bold text-[#2D1810] mb-2">7</div>
-              <div className="text-xl font-medium">Lessons included free</div>
-            </div>
-            <div>
-              <div className="text-6xl font-display font-bold text-[#2D1810] mb-2">$0</div>
-              <div className="text-xl font-medium">To start learning today</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-6 py-32">
-        <div className="card bg-[#5D4037] text-[#F5F0E8] text-center max-w-3xl mx-auto rotate-[-0.5deg]">
-          <h2 className="font-display font-bold mb-6">
-            Ready to actually learn a language?
-          </h2>
-          <p className="text-xl opacity-90 mb-8">
-            Stop drilling. Start reading. Your first 7 lessons are waiting.
+      <section id="mobile" className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8 sm:py-32">
+        <div className="rounded-[36px] bg-[#062f31] px-6 py-14 text-center text-white sm:px-12 sm:py-20">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-200">
+            One learning life
           </p>
-          <Link href="/signup">
-            <button className="bg-[#81C784] text-[#2D1810] px-8 py-4 rounded-lg font-bold text-xl shadow-[4px_4px_0px_#2D1810] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_#2D1810] transition-all">
-              Get started free →
-            </button>
+          <h2 className="mx-auto mt-4 max-w-3xl font-display text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+            Your library and vocabulary, wherever the day takes you.
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">
+            The responsive experience is being built on one shared data model, ready for native iOS
+            and Android companions.
+          </p>
+          <Link
+            href="/library"
+            className="mt-9 inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-white px-7 py-4 font-semibold text-teal-950 transition hover:bg-teal-50"
+          >
+            Ouvrir votre espace d’apprentissage <ArrowRight className="h-5 w-5" />
           </Link>
-          <p className="text-sm opacity-70 mt-6">
-            No credit card. No trial period BS. Just log in and read.
-          </p>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t-3 border-[#2D1810] py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#5D4037] rounded-full flex items-center justify-center text-[#F5F0E8] font-bold">
-                L
-              </div>
-              <span className="font-display font-bold text-xl">Lexara</span>
-            </div>
-
-            <div className="flex gap-8 text-sm">
-              <Link href="/about" className="hover:text-[#5D4037] transition-colors">About</Link>
-              <Link href="/privacy" className="hover:text-[#5D4037] transition-colors">Privacy</Link>
-              <Link href="/terms" className="hover:text-[#5D4037] transition-colors">Terms</Link>
-            </div>
-
-            <div className="text-sm opacity-70">
-              Made with ❤️ for language learners
-            </div>
-          </div>
-
-          <div className="text-center mt-8 pt-8 border-t-2 border-[#2D1810] opacity-60 text-sm">
-            © 2024 Lexara. Learn languages by reading what you love.
-          </div>
+      <footer className="border-t border-slate-200">
+        <div className="mx-auto flex max-w-[1240px] flex-col gap-6 px-5 py-10 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <BrandMark />
+          <p>Read deeply. Listen closely. Speak naturally.</p>
+          <p>© {new Date().getFullYear()} Immerli</p>
         </div>
       </footer>
-    </div>
+    </main>
   );
 }

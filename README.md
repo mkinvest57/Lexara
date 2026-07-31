@@ -1,240 +1,80 @@
-# Lexara
+# Immerli
 
-**Learn languages through real content, not exercises.**
+**Turn real-world content into language you remember.**
 
-Lexara is a language learning platform inspired by the immersion method. Read articles, watch videos, listen to podcasts - click any word to save it, then review with spaced repetition.
+Immerli is an immersion-first language-learning product. Learners can open or import a lesson, tap any word for an in-context meaning, save vocabulary, listen to pronunciation, and review with spaced repetition.
 
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat&logo=next.js&logoColor=white)
-![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=flat&logo=nestjs&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)
+## What works today
 
-## 🎯 Features
+- Responsive marketing site and authenticated web app
+- Demo sign-in and first-time account setup
+- Searchable, level-filtered lesson library
+- Manual text import with automatic sentence and token creation
+- Interactive reader with translation, pronunciation, and saved-word states
+- Vocabulary collection, spaced-repetition review, goals, and progress statistics
+- Expo SDK 57 app foundation for iOS, Android, and web
+- Supabase Postgres/RLS production schema ready to apply after project approval
+- Vercel production configuration without embedded secrets
 
-### Core MVP (P0)
-- ✅ **Immersive Reader** - Click any word to see translation and save it
-- ✅ **Smart Vocabulary** - Words stay highlighted across all lessons
-- ✅ **Spaced Repetition** - Review your vocabulary with optimized intervals
-- ✅ **Progress Tracking** - Daily stats, words known, reading streaks
-- ✅ **Multiple Levels** - Beginner, Intermediate, Advanced content
+## Repository
 
-### Coming Soon (P1)
-- 🚧 Manual content import (paste articles/text)
-- 🚧 YouTube subtitle import
-- 🚧 AI contextual translation (Claude API)
-- 🚧 Audio synchronization
-- 🚧 Personalized recommendations
-
-### Future (P2)
-- 📋 Browser extension for one-click import
-- 📋 Multiple SRS activities (cloze, dictation, MCQ)
-- 📋 AI tutor for conversation practice
-- 📋 Mobile app (React Native + Expo)
-- 📋 Community challenges and leaderboards
-
-## 🏗️ Architecture
-
-**Monorepo** structure with Turborepo:
-
-```
-lexara/
-├── apps/
-│   ├── web/          # Next.js 15 frontend
-│   └── api/          # NestJS backend
-├── packages/
-│   ├── ui/           # Shared UI components
-│   ├── types/        # Shared TypeScript types
-│   └── config/       # Shared configs
-└── PLAN.md           # Detailed MVP plan
+```text
+apps/
+  api/       NestJS API and local Prisma/SQLite development database
+  mobile/    Expo Router native app
+  web/       Next.js web product
+packages/    Shared workspace packages
+prototypes/  Protected iPhone/Pixel visual prototype
+supabase/    Production Postgres schema and RLS policies
+screens/     Product reference captures supplied for design research
 ```
 
-### Tech Stack
+## Local development
 
-**Frontend**
-- Next.js 15 (App Router, React Server Components)
-- TailwindCSS + shadcn/ui
-- TanStack Query (React Query)
-- NextAuth for authentication
-
-**Backend**
-- NestJS (modular architecture)
-- Prisma ORM
-- PostgreSQL
-- JWT authentication
-- MyMemory Translation API (free tier)
-
-**DevOps**
-- Docker Compose for local development
-- Vercel (frontend deployment)
-- Railway/Render (backend deployment)
-- Neon (Postgres hosting)
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- pnpm 9+
-- Docker (for PostgreSQL)
-
-### Installation
+Requirements: Node.js 22.13 or newer and pnpm 9 or newer.
 
 ```bash
-# Clone the repo
-git clone https://github.com/yourusername/lexara.git
-cd lexara
-
-# Install dependencies
 pnpm install
-
-# Start PostgreSQL
-docker-compose up -d
-
-# Setup backend
-cd apps/api
-cp .env.example .env
-pnpm prisma:generate
-pnpm prisma:migrate
-pnpm prisma:seed
-
-# Setup frontend
-cd ../web
-cp .env.example .env.local
+pnpm dev
 ```
 
-### Development
+The web app runs on `http://localhost:3000` and the API on `http://localhost:3001/api`.
+
+Run the native app separately:
 
 ```bash
-# Start all apps (from root)
-pnpm dev
-
-# Or start individually
-cd apps/api && pnpm dev    # Backend on :3001
-cd apps/web && pnpm dev    # Frontend on :3000
+pnpm --filter @immerli/mobile start
 ```
 
-### Demo Account
+### Demo account
 
-```
-Email: demo@lexara.com
+```text
+Email: demo@immerli.com
 Password: demo123456
 ```
 
-## 📚 Project Structure
+## Verification
 
-### Backend Modules
-
-```
-apps/api/src/
-├── auth/              # JWT authentication
-├── users/             # User management
-├── language-profiles/ # User language settings
-├── lessons/           # Lessons & tokenization
-├── vocab/             # Vocabulary (LingQs) & translation
-├── srs/               # Spaced repetition system
-├── stats/             # Statistics & activity logs
-└── prisma/            # Database service
+```bash
+pnpm build
+pnpm --filter @immerli/web type-check
+pnpm --filter @immerli/mobile exec tsc --noEmit
+cd apps/mobile && npx expo-doctor@latest
 ```
 
-### Database Schema
+## Production path
 
-9 main entities:
-- **User** → **LanguageProfile** → **Lessons** → **Sentences** → **Tokens**
-- **VocabEntry** ← **VocabOccurrence** → **Token** (links vocab to lessons)
-- **SRSItem** (scheduling for each vocab entry)
-- **ReviewSession** + **ActivityLog** (tracking)
+The checked-in Supabase migration contains profiles, multi-language settings,
+lessons, tokenized text, vocabulary, review scheduling, playlists, activity
+logs, explicit Data API grants, and row-level security. Creating the hosted
+Supabase project is intentionally gated on explicit account/cost confirmation.
+See `SUPABASE_BACKEND.md` for the remaining auth integration boundary before
+deployment.
 
-## 🎓 How It Works
+App Store and Play Store builds are configured through `apps/mobile/eas.json`; final signing and submission require the owner's Expo, Apple Developer, and Google Play credentials.
 
-### 1. Reading Flow
-1. User opens a lesson from the library
-2. Text is displayed with each word clickable
-3. Click word → see translation + example sentence
-4. Click "Save" → creates a LingQ (vocab entry)
-5. Word turns yellow in this and all future lessons
-6. Reading activity is logged (words read, time spent)
+## Brand
 
-### 2. Vocabulary System
-- Each saved word has a **status** (1-3 = learning, 4 = known)
-- Linked to original **context** (sentence where first seen)
-- Automatically creates an **SRS item** for review
+The working product name is **Immerli**. Live checks showed `immerli.com` and `immerli.app` as available at the time of research, but no domain has been purchased and availability is not reserved.
 
-### 3. Spaced Repetition
-- Algorithm: **SM-2 simplified**
-- Intervals: 1 day → 3 days → 7 days → 14 days → 30 days
-- Correct answer 2x in a row → status increases
-- Wrong answer → resets to 1 day interval
-- Status 4 (known) → no more reviews
-
-### 4. Statistics
-- **Today**: words read, minutes listened, cards reviewed
-- **Overall**: total known words, total LingQs, due cards
-- **Goals**: customizable daily targets
-
-## 🔑 Key Differentiators
-
-vs. **LingQ**:
-- ✨ Cleaner, simpler UI (less overwhelming)
-- ✨ Better tokenization and word tracking
-- ✨ Focused MVP (no feature bloat)
-- ✨ Modern tech stack (easier to iterate)
-
-vs. **Duolingo**:
-- 📖 Real content, not artificial exercises
-- 🎯 User-driven learning (import your own content)
-- 🧠 Vocabulary in context, not isolated words
-
-## 📈 Success Metrics
-
-**MVP Validation Goals** (Week 1-4):
-- 50+ lessons read
-- 500+ LingQs created
-- 200+ review sessions
-- 30%+ D7 retention rate
-- NPS ≥ 7/10
-
-## 🗺️ Roadmap
-
-**Phase 1 - Backend Foundation** ✅ (Weeks 1-2)
-- [x] NestJS setup + Prisma schema
-- [x] Auth (signup/login)
-- [x] All modules (lessons, vocab, SRS, stats)
-- [x] Seed data (7 demo lessons)
-
-**Phase 2 - Frontend Core** 🚧 (Weeks 3-4)
-- [ ] Next.js setup + authentication
-- [ ] Library page (lesson cards)
-- [ ] Immersive reader (tokenized text)
-- [ ] Vocabulary page
-- [ ] SRS review session
-- [ ] Dashboard with stats
-
-**Phase 3 - Polish & Deploy** (Weeks 5-6)
-- [ ] Responsive design
-- [ ] Error handling & loading states
-- [ ] Dark mode
-- [ ] Deploy to production
-- [ ] User testing with 5-10 early adopters
-
-**Phase 4 - Content Import** (Weeks 7-8)
-- [ ] Manual text import
-- [ ] URL scraping (articles)
-- [ ] YouTube subtitle import
-
-## 🤝 Contributing
-
-Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
-
-## 📝 License
-
-MIT © 2024 Lexara
-
-## 🙏 Acknowledgments
-
-- Inspired by **LingQ** and the comprehensible input method
-- Built with amazing open-source tools
-- Special thanks to early testers
-
----
-
-**Made with ❤️ by developers who love languages**
+MIT © 2026 Immerli

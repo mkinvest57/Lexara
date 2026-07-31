@@ -10,11 +10,20 @@ export class LessonsController {
 
   @Get()
   async findAll(@CurrentUser() user, @Query('profileId') profileId: string, @Query('level') level?: string) {
-    return this.lessonsService.findAll(profileId, level);
+    return this.lessonsService.findAll(profileId, user.userId, level);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user) {
     return this.lessonsService.findOne(id, user.userId);
+  }
+
+  @Post()
+  async create(
+    @CurrentUser() user,
+    @Body() body: { profileId: string; title: string; content: string; type: string; level: string; imageUrl?: string; sourceUrl?: string }
+  ) {
+    const { profileId, ...data } = body;
+    return this.lessonsService.create(profileId, user.userId, data);
   }
 }

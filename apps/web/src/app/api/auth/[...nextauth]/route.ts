@@ -2,7 +2,7 @@ import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { apiClient } from '@/lib/api-client';
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -32,7 +32,16 @@ export const authOptions: NextAuthOptions = {
 
           return null;
         } catch (error) {
-          console.error('Auth error:', error);
+          console.error('[auth] credentials authorization failed', {
+            code: (error as { code?: string })?.code,
+            statusCode: (error as { statusCode?: number })?.statusCode,
+            message: (error as { message?: string })?.message || String(error),
+          });
+
+          if ((error as { code?: string })?.code === 'API_UNAVAILABLE') {
+            throw new Error('API_UNAVAILABLE');
+          }
+
           return null;
         }
       },
