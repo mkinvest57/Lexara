@@ -159,6 +159,18 @@ export default function ImportLessonScreen() {
                     Lien Web
                   </Text>
                 </Pressable>
+                <Pressable
+                  onPress={() => setMode('file')}
+                  style={[styles.modeTab, mode === 'file' && styles.modeTabActive]}>
+                  <SymbolView
+                    name="doc.badge.plus"
+                    tintColor={mode === 'file' ? productTheme.green : productTheme.muted}
+                    size={18}
+                  />
+                  <Text style={[styles.modeTabText, mode === 'file' && styles.modeTabTextActive]}>
+                    Fichier (.txt)
+                  </Text>
+                </Pressable>
               </View>
 
               {mode === 'url' ? (

@@ -51,9 +51,12 @@ export default function StatsScreen() {
           <SymbolView name="chevron.left" tintColor={productTheme.ink} size={20} />
         </Pressable>
         <Text style={styles.headerTitle}>Statistiques anglais</Text>
-        <View style={styles.headerButton}>
+        <Pressable
+          accessibilityLabel="Voir le classement et défis"
+          onPress={() => router.push('/challenges')}
+          style={styles.headerButton}>
           <SymbolView name="chart.bar.fill" tintColor={productTheme.ink} size={19} />
-        </View>
+        </Pressable>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.goalCard}>

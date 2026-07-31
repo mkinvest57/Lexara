@@ -508,15 +508,17 @@ function WordSheet({
           <Text style={styles.context}>{token?.context}</Text>
           {status ? (
             <View style={styles.statusRow}>
-              {[1, 2, 3, 4].map((item) => (
+              {[1, 2, 3, 4, 5].map((item) => (
                 <Pressable
                   key={item}
                   accessibilityRole="button"
                   accessibilityLabel={`Statut ${item}`}
                   accessibilityState={{ selected: status === item }}
-                  onPress={() => onStatus(item as 1 | 2 | 3 | 4)}
+                  onPress={() => onStatus((item > 4 ? 4 : item) as 1 | 2 | 3 | 4)}
                   style={[styles.statusButton, status === item && styles.statusButtonActive]}>
-                  <Text style={[styles.statusText, status === item && styles.statusTextActive]}>{item}</Text>
+                  <Text style={[styles.statusText, status === item && styles.statusTextActive]}>
+                    {item === 5 ? '✓' : item}
+                  </Text>
                 </Pressable>
               ))}
             </View>

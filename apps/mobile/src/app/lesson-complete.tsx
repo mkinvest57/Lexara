@@ -164,20 +164,28 @@ export default function LessonCompleteScreen() {
           </View>
         ) : null}
       </ScrollView>
-      {nextLesson ? (
-        <View style={styles.footer}>
+      <View style={styles.footer}>
+        {nextLesson ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Commencer la leçon suivante"
             onPress={() =>
               router.replace({ pathname: '/lesson/[id]', params: { id: nextLesson.id } })
             }
-            style={styles.primaryButton}>
-            <Text style={styles.primaryText}>Commencer la leçon suivante</Text>
+            style={[styles.primaryButton, { flex: 1 }]}>
+            <Text style={styles.primaryText}>Leçon suivante</Text>
             <SymbolView name="chevron.right" tintColor="#FFFFFF" size={16} />
           </Pressable>
-        </View>
-      ) : null}
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Réviser le vocabulaire"
+          onPress={() => router.push({ pathname: '/review', params: { lessonId: lesson.id } })}
+          style={[styles.secondaryButton, { flex: 1 }]}>
+          <SymbolView name="rectangle.stack.fill" tintColor={productTheme.greenDark} size={16} />
+          <Text style={styles.secondaryText}>Réviser le vocabulaire</Text>
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
@@ -455,6 +463,8 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: productTheme.line,
     backgroundColor: 'rgba(255,255,255,.97)',
+    flexDirection: 'row',
+    gap: 10,
   },
   primaryButton: {
     minHeight: 52,
@@ -469,6 +479,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  secondaryButton: {
+    minHeight: 52,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: productTheme.line,
+    backgroundColor: productTheme.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  secondaryText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: productTheme.ink,
   },
   pressed: {
     opacity: 0.68,

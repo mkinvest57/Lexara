@@ -47,6 +47,9 @@ export default function ProfileScreen() {
         ) : (
           <Text style={styles.name}>{product.profile.displayName}</Text>
         )}
+        <View style={styles.streakPill}>
+          <Text style={styles.streakPillText}>🔥 {product.currentStreak} jours de série</Text>
+        </View>
         <Text style={styles.accountStatus}>Profil local Immerli</Text>
 
         <View style={styles.languageCard}>
@@ -68,6 +71,29 @@ export default function ProfileScreen() {
           <Metric value={product.vocabulary.length} label="Mots sauvés" />
           <View style={styles.metricDivider} />
           <Metric value={product.totalWordsRead} label="Mots lus" />
+        </View>
+
+        <View style={styles.goalSection}>
+          <Text style={styles.goalTitle}>Objectif quotidien : {product.profile.dailyMinutes} min / jour</Text>
+          <View style={styles.goalOptions}>
+            {[10, 15, 20, 30].map((mins) => (
+              <Pressable
+                key={mins}
+                onPress={() => product.finishOnboarding({ dailyMinutes: mins })}
+                style={[
+                  styles.goalOption,
+                  product.profile.dailyMinutes === mins && styles.goalOptionActive,
+                ]}>
+                <Text
+                  style={[
+                    styles.goalOptionText,
+                    product.profile.dailyMinutes === mins && styles.goalOptionTextActive,
+                  ]}>
+                  {mins}m
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         <View style={styles.links}>
@@ -240,6 +266,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
+  },
+  streakPill: {
+    marginTop: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#FFF0ED',
+  },
+  streakPillText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: productTheme.orange,
+  },
+  goalSection: {
+    width: '100%',
+    marginTop: 13,
+    padding: 16,
+    borderRadius: 15,
+    backgroundColor: productTheme.surface,
+  },
+  goalTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: productTheme.ink,
+    marginBottom: 10,
+  },
+  goalOptions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  goalOption: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: productTheme.line,
+    alignItems: 'center',
+  },
+  goalOptionActive: {
+    borderColor: productTheme.green,
+    backgroundColor: productTheme.greenPale,
+  },
+  goalOptionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: productTheme.muted,
+  },
+  goalOptionTextActive: {
+    color: productTheme.greenDark,
   },
   metric: {
     flex: 1,
