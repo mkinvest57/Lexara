@@ -62,6 +62,31 @@ export default function LibraryHomeScreen() {
           </View>
         </Pressable>
 
+        {product.vocabulary.length > 0 && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Lancer la session de révision rapide"
+            onPress={() => router.push('/review')}
+            style={({ pressed }) => [styles.quickReviewCard, pressed && styles.pressed]}>
+            <View style={styles.quickReviewIcon}>
+              <SymbolView name="sparkles" tintColor="#FFFFFF" size={22} />
+            </View>
+            <View style={styles.quickReviewCopy}>
+              <Text style={styles.quickReviewTitle}>
+                {product.vocabulary.filter((item) => item.status < 4).length > 0
+                  ? `⚡ ${product.vocabulary.filter((item) => item.status < 4).length} mots à réviser aujourd'hui`
+                  : `🎯 ${product.vocabulary.length} mots enregistrés dans votre vocabulaire`}
+              </Text>
+              <Text style={styles.quickReviewSubtitle}>
+                Réviser rapidement avec l'algorithme FSRS
+              </Text>
+            </View>
+            <View style={styles.quickReviewBadge}>
+              <Text style={styles.quickReviewBadgeText}>Réviser</Text>
+            </View>
+          </Pressable>
+        )}
+
         {sections.map((section) => {
           let lessons = section.filter
             ? product.lessons.filter((lesson) => lesson.kind === section.filter)
@@ -221,6 +246,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  quickReviewCard: {
+    marginHorizontal: 16,
+    marginBottom: 20,
+    borderRadius: 20,
+    backgroundColor: '#063F40',
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  quickReviewIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quickReviewCopy: {
+    flex: 1,
+  },
+  quickReviewTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  quickReviewSubtitle: {
+    fontSize: 12,
+    marginTop: 3,
+    color: 'rgba(255, 255, 255, 0.75)',
+  },
+  quickReviewBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  quickReviewBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#063F40',
   },
   sectionTitle: {
     fontSize: 25,
