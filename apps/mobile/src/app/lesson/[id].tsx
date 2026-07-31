@@ -18,6 +18,9 @@ import { getLessonCover } from '@/lib/lesson-covers';
 import { useProduct } from '@/lib/product-store';
 import { speakEnglish, stopSpeech } from '@/lib/speech';
 import { translateEnglishToFrench } from '@/lib/translation';
+import { ExternalDictionaries } from '@/components/external-dictionaries';
+import { VoiceRecorderModal } from '@/components/voice-recorder-modal';
+import { getPhoneticAnnotation } from '@/lib/phonetics';
 import { productTheme } from '@/constants/product-theme';
 
 const punctuationOnly = /^[^a-zA-Z]+$/;

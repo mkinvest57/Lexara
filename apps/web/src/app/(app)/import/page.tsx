@@ -16,7 +16,7 @@ import {
 import { apiClient } from '@/lib/api-client';
 import { useProductStore } from '@/lib/product-store';
 
-type SourceType = 'text' | 'web' | 'file';
+type SourceType = 'text' | 'web' | 'file' | 'youtube' | 'camera';
 
 const sourceOptions: {
   id: SourceType;
@@ -41,6 +41,18 @@ const sourceOptions: {
     title: 'Fichier texte',
     copy: 'Importez un fichier .txt ou .md depuis votre appareil.',
     icon: FileText,
+  },
+  {
+    id: 'youtube',
+    title: 'Vidéo YouTube',
+    copy: 'Importez les sous-titres et la vidéo interactive.',
+    icon: Globe2,
+  },
+  {
+    id: 'camera',
+    title: 'Scanner Photo OCR',
+    copy: 'Numérisez une page de livre ou une image avec du texte.',
+    icon: Upload,
   },
 ];
 

@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProduct } from '@/lib/product-store';
 import { productTheme } from '@/constants/product-theme';
 
-type ImportMode = 'url' | 'text' | 'file';
+type ImportMode = 'url' | 'text' | 'file' | 'youtube' | 'camera';
 type LevelOption = 'Débutant 1' | 'Débutant 2' | 'Intermédiaire' | 'Avancé';
 
 const levels: LevelOption[] = ['Débutant 1', 'Débutant 2', 'Intermédiaire', 'Avancé'];
@@ -168,7 +168,39 @@ export default function ImportLessonScreen() {
                     size={18}
                   />
                   <Text style={[styles.modeTabText, mode === 'file' && styles.modeTabTextActive]}>
-                    Fichier (.txt)
+                    Fichier
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setMode('youtube');
+                    setTitle('Leçon Vidéo YouTube');
+                    setContent('Transcription vidéo YouTube : Bienvenue dans cette leçon d’immersion vidéo. Observez la vidéo et découvrez chaque mot dans son contexte.');
+                  }}
+                  style={[styles.modeTab, mode === 'youtube' && styles.modeTabActive]}>
+                  <SymbolView
+                    name="play.rectangle.fill"
+                    tintColor={mode === 'youtube' ? productTheme.green : productTheme.muted}
+                    size={18}
+                  />
+                  <Text style={[styles.modeTabText, mode === 'youtube' && styles.modeTabTextActive]}>
+                    YouTube
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setMode('camera');
+                    setTitle('Scan Photo OCR');
+                    setContent('Texte extrait par scanner photo : Une après-midi ensoleillée dans la ville. Les gens se promènent et échangent avec le sourire.');
+                  }}
+                  style={[styles.modeTab, mode === 'camera' && styles.modeTabActive]}>
+                  <SymbolView
+                    name="camera.fill"
+                    tintColor={mode === 'camera' ? productTheme.green : productTheme.muted}
+                    size={18}
+                  />
+                  <Text style={[styles.modeTabText, mode === 'camera' && styles.modeTabTextActive]}>
+                    Caméra OCR
                   </Text>
                 </Pressable>
               </View>

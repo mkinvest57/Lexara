@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomTabs } from '@/components/bottom-tabs';
 import { useProduct, type VocabularyStatus } from '@/lib/product-store';
 import { productTheme } from '@/constants/product-theme';
+import { generateAnkiExportText } from '@/lib/anki-exporter';
 import { speakEnglish } from '@/lib/speech';
 
 type Filter = 'Tout' | 'À apprendre' | 'Connu';
