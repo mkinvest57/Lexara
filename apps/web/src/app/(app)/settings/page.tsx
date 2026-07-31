@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useProductStore } from '@/lib/product-store';
 import { getPreferredEnglishWebVoice, speakEnglishWeb } from '@/lib/speech';
+import { SUPPORTED_LANGUAGES } from '@/lib/catalog';
 
 type SettingsSection = 'general' | 'reader' | 'review' | 'language';
 
@@ -47,6 +48,10 @@ export default function SettingsPage() {
     setSaved(`${label} enregistré.`);
     window.setTimeout(() => setSaved(''), 1800);
   };
+
+  const speechRate = preferences?.speechRate ?? 0.9;
+  const readerFontSize = preferences?.readerFontSize ?? 18;
+  const dailyReviewSize = preferences?.dailyReviewSize ?? 10;
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-white px-4 py-7 sm:px-7">
@@ -144,52 +149,27 @@ export default function SettingsPage() {
                     type="range"
                     min="16"
                     max="30"
-                    value={preferences.readerFontSize}
+                    value={readerFontSize}
                     onChange={(event) =>
                       updatePreferences({ readerFontSize: Number(event.target.value) })
                     }
                     onPointerUp={() => announceSaved('Taille du texte')}
-                    className="w-44 accent-[#0b1c2d]"
+                    className="w-40 accent-[#0b1c2d]"
+                    aria-label="Taille du texte"
                   />
-                  <strong className="w-8">{preferences.readerFontSize}</strong>
+                  <strong className="w-12 text-sm">{readerFontSize}px</strong>
                 </div>
               </SettingRow>
               <SettingRow
-                label="Afficher la prononciation"
-                description="Affiche la prononciation enregistrée dans le vocabulaire."
-              >
-                <Switch
-                  checked={preferences.showPronunciation}
-                  onChange={(checked) => {
-                    updatePreferences({ showPronunciation: checked });
-                    announceSaved('Prononciation');
-                  }}
-                  label="Afficher la prononciation"
-                />
-              </SettingRow>
-              <SettingRow
-                label="Lecture audio automatique"
-                description="Démarre l’audio à l’ouverture d’une leçon lorsque votre navigateur l’autorise."
-              >
-                <Switch
-                  checked={preferences.autoPlayAudio}
-                  onChange={(checked) => {
-                    updatePreferences({ autoPlayAudio: checked });
-                    announceSaved('Lecture audio');
-                  }}
-                  label="Lecture audio automatique"
-                />
-              </SettingRow>
-              <SettingRow
-                label="Voix anglaise"
-                description={`Meilleure voix disponible : ${voiceName}`}
+                label="Synthèse vocale"
+                description={`Voix détectée : ${voiceName}.`}
               >
                 <button
                   type="button"
                   onClick={() =>
                     void speakEnglishWeb(
                       'Welcome to Immerli. Read, listen, and learn naturally.',
-                      { rate: preferences.speechRate }
+                      { rate: speechRate }
                     )
                   }
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold hover:bg-slate-50"
@@ -205,7 +185,7 @@ export default function SettingsPage() {
                     min="0.65"
                     max="1.1"
                     step="0.05"
-                    value={preferences.speechRate}
+                    value={speechRate}
                     onChange={(event) =>
                       updatePreferences({ speechRate: Number(event.target.value) })
                     }
@@ -213,14 +193,14 @@ export default function SettingsPage() {
                     className="w-40 accent-[#0b1c2d]"
                     aria-label="Vitesse de lecture"
                   />
-                  <strong className="w-12 text-sm">{preferences.speechRate.toFixed(2)}x</strong>
+                  <strong className="w-12 text-sm">{speechRate.toFixed(2)}x</strong>
                 </div>
               </SettingRow>
               <div className="rounded-xl bg-slate-50 p-5">
                 <p className="text-sm font-bold">Aperçu</p>
                 <p
                   className="mt-3 font-medium leading-[2]"
-                  style={{ fontSize: preferences.readerFontSize }}
+                  style={{ fontSize: readerFontSize }}
                 >
                   Every story becomes easier when you keep reading.
                 </p>
@@ -235,7 +215,7 @@ export default function SettingsPage() {
               >
                 <select
                   aria-label="Taille de la session de révision"
-                  value={preferences.dailyReviewSize}
+                  value={dailyReviewSize}
                   onChange={(event) => {
                     updatePreferences({ dailyReviewSize: Number(event.target.value) });
                     announceSaved('Taille de la session');
@@ -259,12 +239,32 @@ export default function SettingsPage() {
             </SettingsPanel>
           )}
           {section === 'language' && (
-            <SettingsPanel title="Langues">
-              <SettingRow label="Langue étudiée">
-                <span className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold">
-                  <Languages className="h-4 w-4" aria-hidden="true" />
-                  {profile.targetLanguageLabel}
-                </span>
+            <SettingsPanel title="Langues d'apprentissage">
+              <SettingRow
+                label="Langue étudiée (50+ langues disponibles)"
+                description="Sélectionnez la langue que vous souhaitez apprendre. Le catalogue de leçons s'adaptera automatiquement."
+              >
+                <select
+                  aria-label="Langue d'apprentissage"
+                  value={profile.targetLanguage || 'en'}
+                  onChange={(event) => {
+                    const lang = SUPPORTED_LANGUAGES.find((l) => l.code === event.target.value);
+                    if (lang) {
+                      updateProfile({
+                        targetLanguage: lang.code,
+                        targetLanguageLabel: lang.nameFr || lang.nameEn || lang.code,
+                      });
+                      announceSaved(`Langue (${lang.flag} ${lang.nameFr || lang.nameEn})`);
+                    }
+                  }}
+                  className="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15"
+                >
+                  {SUPPORTED_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.flag} {lang.nameFr || lang.nameEn} ({lang.code.toUpperCase()})
+                    </option>
+                  ))}
+                </select>
               </SettingRow>
               <SettingRow label="Niveau actuel">
                 <select
@@ -283,9 +283,8 @@ export default function SettingsPage() {
                   <option>Avancé</option>
                 </select>
               </SettingRow>
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
-                Une seule langue active est proposée dans cette version. Vos leçons, mots et
-                statistiques restent cohérents dans tout le produit.
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
+                ✨ <strong>50+ langues débloquées !</strong> Vos leçons, mots de vocabulaire et statistiques se mettent à jour automatiquement selon la langue choisie.
               </div>
             </SettingsPanel>
           )}
@@ -323,30 +322,5 @@ function SettingRow({
       </div>
       <div>{children}</div>
     </div>
-  );
-}
-
-function Switch({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative h-7 w-12 rounded-full transition ${checked ? 'bg-blue-600' : 'bg-slate-300'}`}
-    >
-      <span
-        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${checked ? 'left-6' : 'left-1'}`}
-      />
-    </button>
   );
 }

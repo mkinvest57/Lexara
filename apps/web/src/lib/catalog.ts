@@ -145,3 +145,13 @@ export function getLessonsForLanguage(targetLangCode: string = 'en', baseLang: B
 
   return lessons;
 }
+
+export function formatDuration(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remaining = seconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(remaining).padStart(2, '0')}`;
+}
+
+export function getWordCount(content: string) {
+  return content.split(/\s+/).filter(Boolean).length;
+}

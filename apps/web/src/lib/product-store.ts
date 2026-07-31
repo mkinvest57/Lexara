@@ -11,6 +11,7 @@ import mikeMarket from '../../../mobile/assets/images/lesson-mike-market.jpg';
 import stellaCity from '../../../mobile/assets/images/lesson-stella-city.jpg';
 
 export type LearningStatus = 1 | 2 | 3 | 4 | 5;
+import { formatDuration, getLessonsForLanguage } from './catalog';
 export type SyncStatus = 'local' | 'syncing' | 'synced' | 'offline';
 
 type PersistedFsrsCard = Omit<Card, 'due' | 'last_review'> & {
@@ -634,7 +635,40 @@ export const useProductStore = create<ProductState>()((set, get) => ({
         },
       };
     }),
-  updateProfile: (patch) => set((state) => ({ profile: { ...state.profile, ...patch } })),
+  updateProfile: (patch) =>
+    set((state) => {
+      const nextProfile = { ...state.profile, ...patch };
+      const langChanged = Boolean(
+        patch.targetLanguage && patch.targetLanguage !== state.profile.targetLanguage
+      );
+      let lessons = state.lessons;
+      if (langChanged && patch.targetLanguage) {
+        const rawLessons = getLessonsForLanguage(patch.targetLanguage);
+        lessons = rawLessons.map((l: any) => ({
+          id: l.id,
+          title: l.title,
+          collection: l.collection,
+          level:
+            l.level === 'Débutant 1'
+              ? 'debutant-1'
+              : l.level === 'Débutant 2'
+                ? 'debutant-2'
+                : l.level === 'Intermédiaire'
+                  ? 'intermediaire-1'
+                  : 'avance',
+          levelLabel: l.level,
+          type: l.kind,
+          image: l.imagePosition === 'center' ? mikeKitchen : stellaCity,
+          content: l.content,
+          translation: l.translation || '',
+          wordCount: getWordCount(l.content),
+          duration: formatDuration(l.durationSeconds),
+          unknownPercent: 100,
+          likes: 0,
+        }));
+      }
+      return { profile: nextProfile, lessons };
+    }),
   updatePreferences: (patch) =>
     set((state) => ({ preferences: { ...state.preferences, ...patch } })),
 }));
@@ -677,8 +711,21 @@ export function hydrateProductStore() {
       const persisted = (parsed.state || parsed) as Partial<PersistedProductState>;
       const persistedLessons = persisted.lessons || [];
       const persistedLessonIds = new Set(persistedLessons.map((lesson) => lesson.id));
+      const defaultPrefs: ProductPreferences = {
+        interfaceLanguage: 'fr',
+        theme: 'clair',
+        readerFontSize: 18,
+        showPronunciation: true,
+        autoPlayAudio: false,
+        speechRate: 0.9,
+        dailyReviewSize: 10,
+      };
       useProductStore.setState({
         ...persisted,
+        preferences: {
+          ...defaultPrefs,
+          ...(persisted.preferences || {}),
+        },
         lessons: [
           ...persistedLessons,
           ...seedLessons.filter((lesson) => !persistedLessonIds.has(lesson.id)),
