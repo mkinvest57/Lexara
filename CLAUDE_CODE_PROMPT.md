@@ -79,8 +79,12 @@ Ce qui reste :
 # PHASE 1 — CŒUR DU READER (la feature signature)
 
 **Repos à explorer** :
-- `pacexy/flow` → `src/reader/`, `src/components/reader/` — architecture reader, pagination, virtualisation
-- `open-spaced-repetition/ts-fsrs` → `src/fsrs/` — SRS engine (déjà intégré, à étendre)
+- `pacexy/flow` → architecture reader (src/reader/, pagination, virtualisation, thèmes)
+- `gerhardsletten/react-reader` → wrapper ePub.js React, sélection texte
+- `altmshfkgudtjr/react-epub-viewer` → reader ePub simple, facile à forker
+- `victorsoares96/epubjs-react-native` → reader ePub React Native/Expo (Phase 10 aussi)
+- `open-spaced-repetition/ts-fsrs` → SRS engine FSRS6 (déjà intégré, à étendre)
+- `VienDinhCom/supermemo` → alternative SM2 si besoin plus simple
 
 **Ce qu'il faut construire** :
 
@@ -113,7 +117,9 @@ Ce qui reste :
 
 **Repos à explorer** :
 - `umd-mith/webvtt-player` → synchronisation texte/audio pour mode karaoké
-- `pacexy/flow` → modes de navigation (page, scroll continu)
+- `contours/react-transcript-player` → alternative transcript player React
+- `E-Kuerschner/useAudioPlayer` (react-use-audio-player) → hooks audio web
+- `doublesymmetry/react-native-track-player` → audio mobile background
 
 1. **Mode Phrase** : Une phrase à la fois, traduction repliable, audio phrase, liste des LingQs de la phrase, swipe mobile
 2. **Mode Karaoké** : Plein écran, texte auto-défilant synchronisé à l'audio, phrase courante surlignée, fallback scroll manuel sans timestamps
@@ -175,12 +181,15 @@ Ce qui reste :
 
 **Repos à explorer** :
 - `extractus/article-extractor` → Readability articles web (1.7k★)
+- `mozilla/readability` → moteur Readability original (Firefox Reader Mode, 5k★)
 - `devhims/youtube-caption-extractor` → sous-titres YouTube
+- `stavkamil/youtube-captions-ts` → alternative TS typée pour YouTube
 - `pacexy/flow` → parsing EPUB
 - `mozilla/pdf.js` → extraction PDF (46k★)
 - `wxt-dev/wxt` → framework MV3 TypeScript multi-navigateurs (9.8k★)
 - `PlasmoHQ/plasmo` → alternative à WXT (11.8k★, plus "app React")
 - `crxjs/chrome-extension-tools` → plugin Vite pour extensions MV3 (4.1k★)
+- `mefengl/wxt-starter` → template WXT prêt à l'emploi
 - `webclipper/web-clipper` → modèle complet de clipping (6.6k★)
 - `obsidianmd/obsidian-clipper` → pattern UX clipper→app (4.7k★)
 - `xtang/netflix_trans` → hook soustitres Netflix
@@ -201,6 +210,7 @@ Ce qui reste :
 **Repos à explorer** :
 - `jason-liu22/netflix-clone-react-typescript` → shelves horizontales, patterns
 - `Shivamrai15/Netflix-Clone` → fullstack Next+Prisma pour référence
+- `Somesh-Debnath/Netflix-Clone` → Netflix clone Next+Firebase, léger
 - `saulsharma/netflix-ui` → UI Expo mobile Netflix
 
 1. **Étagères Netflix** : Continue Studying, Trending, What's New, Mini Stories, Guided Courses, News Feed, + étagères thématiques (Entertainment, Culture, News, Lifestyle, Science, Food, Sports). Ordre adaptatif.
@@ -245,6 +255,7 @@ Ce qui reste :
 - `saulsharma/netflix-ui` → UI Expo moderne
 - `victorsoares96/epubjs-react-native` → reader ePub React Native
 - `calebnance/expo-netflix` → navigation Expo ancienne mais patterns valables
+- `angelrepublic24/duolingoClone` → clone Duolingo Expo/TS avec navigation tab
 
 1. Navigation par onglets : Bibliothèque, Playlists, Reader, Vocabulaire, Plus
 2. Mode hors ligne (téléchargement leçons, sync vocabulaire, résolution conflits)
@@ -274,6 +285,20 @@ TOUT ce qui est IA passe par Edge Functions Supabase — JAMAIS de clé API côt
 # PHASE 12 — REPORTÉ
 
 NE PAS FAIRE : marketplace tuteurs, réservation sessions, Points, forum Discourse, Writing Exchange, groupes/classes, profil social, parrainage, pricing tiers.
+
+---
+
+## TEMPLATES SAAS (auth + Stripe + Supabase déjà prêts)
+
+Ces templates servent de référence pour la structure auth/billing. Copier les parties pertinentes (webhooks Stripe, gestion abonnements, emails) :
+
+- `KolbySisk/next-supabase-stripe-starter` → le meilleur (800★, Next 15, Supabase, Stripe, webhooks, MIT)
+- `ShenSeanChen/launch-mvp-stripe-nextjs-supabase` → production-ready (~1k★, MIT)
+- `dzlau/stripe-supabase-saas-template` → template Vercel officiel (160★)
+- `Saas-Starter-Kit/Saas-Kit-supabase` → starter SaaS avec RBAC (150★)
+- `gitmvp-com/mvp-launch-stripe-nextjs-supabase` → version minimale (100★)
+
+Ne pas réinventer auth/billing. Ces templates font déjà le job.
 
 ---
 

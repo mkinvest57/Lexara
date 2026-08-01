@@ -1,4 +1,4 @@
-const fallbackCover = require('@/assets/images/immerli-hero.png');
+const fallbackCover = require('@/assets/images/yapro-hero.png');
 
 const covers: Record<string, number> = {
   'mike-cook-1': require('@/assets/images/lesson-mike-kitchen.jpg'),

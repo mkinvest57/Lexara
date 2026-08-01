@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProduct } from '@/lib/product-store';
 import { productTheme } from '@/constants/product-theme';
 
-const hero = require('@/assets/images/immerli-hero.png');
+const hero = require('@/assets/images/yapro-hero.png');
 
 type Choice = {
   id: string;

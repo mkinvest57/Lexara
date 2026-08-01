@@ -187,7 +187,7 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() =>
                     void speakEnglishWeb(
-                      'Welcome to Immerli. Read, listen, and learn naturally.',
+                      'Welcome to YAPRO. Read, listen, and learn naturally.',
                       { rate: speechRate }
                     )
                   }

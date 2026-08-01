@@ -29,7 +29,7 @@ export const KIND_LABELS: Record<string, string> = {
   conversation: 'Conversation',
 };
 
-const FALLBACK_COVER = '/brand/immerli-hero.png';
+const FALLBACK_COVER = '/brand/yapro-hero.png';
 
 export function levelLabel(level: ProficiencyLevel): string {
   return LEVEL_LABELS[level] ?? 'Débutant 1';

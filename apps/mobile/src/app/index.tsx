@@ -165,7 +165,7 @@ export default function LibraryHomeScreen() {
       <View style={styles.quickActions}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Ouvrir le coach Immerli"
+          accessibilityLabel="Ouvrir le coach YAPRO"
           onPress={() => router.push('/coach')}
           style={({ pressed }) => [styles.quickButton, pressed && styles.pressed]}>
           <SymbolView name="sparkles" tintColor={productTheme.ink} size={19} />

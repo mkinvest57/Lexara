@@ -215,7 +215,7 @@ export default function ImportPage() {
         content: content.trim(),
         kind: source === 'web' ? 'article' : source === 'file' ? 'book' : 'story',
         level,
-        coverImageUrl: '/brand/immerli-hero.png',
+        coverImageUrl: '/brand/yapro-hero.png',
         translation: 'Ajoutez votre traduction depuis le lecteur.',
         sourceUrl: sourceUrl.trim() || undefined,
       });

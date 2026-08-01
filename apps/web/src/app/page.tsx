@@ -29,7 +29,7 @@ export default function HomePage() {
         aria-label="Main navigation"
       >
         <div className="mx-auto flex h-[72px] max-w-[1240px] items-center justify-between px-5 sm:px-8">
-          <Link href="/" aria-label="Immerli home">
+          <Link href="/" aria-label="YAPRO home">
             <BrandMark />
           </Link>
           <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
@@ -62,7 +62,7 @@ export default function HomePage() {
 
       <section className="relative isolate min-h-[720px] overflow-hidden bg-[#041f21]">
         <Image
-          src="/brand/immerli-hero.png"
+          src="/brand/yapro-hero.png"
           alt="Worlds of books, conversation, travel and culture connected through language"
           fill
           priority

@@ -1,5 +1,5 @@
 {
-  "name": "@immerli/web",
+  "name": "@yapro/web",
   "type": "module",
   "version": "0.1.0",
   "private": true,

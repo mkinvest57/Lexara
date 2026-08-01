@@ -12,7 +12,7 @@ import { createEmptyCard, fsrs, Rating, type Card } from 'ts-fsrs';
 import { dictionary, getLessonsForLanguage, getWordCount, normalizeWord, seedLessons, type Lesson, type LessonLevel } from './catalog';
 import { productStorage } from './storage';
 
-const STORAGE_KEY = 'immerli.product.v2';
+const STORAGE_KEY = 'yapro.product.v2';
 
 export type VocabularyStatus = 1 | 2 | 3 | 4;
 
