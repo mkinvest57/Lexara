@@ -20,9 +20,8 @@ import { getLessonCover } from '@/lib/lesson-covers';
 import { useProduct } from '@/lib/product-store';
 import { speakEnglish, stopSpeech } from '@/lib/speech';
 import { translateEnglishToFrench } from '@/lib/translation';
-import { ExternalDictionaries } from '@/components/external-dictionaries';
-import { VoiceRecorderModal } from '@/components/voice-recorder-modal';
 import { getPhoneticAnnotation } from '@/lib/phonetics';
+import { paginate, splitSentences } from '@yapro/core';
 import { productTheme } from '@/constants/product-theme';
 
 const punctuationOnly = /^[^a-zA-Z]+$/;
@@ -54,13 +53,21 @@ export default function LessonScreen() {
   const [phraseError, setPhraseError] = useState('');
   const [seen, setSeen] = useState<Set<string>>(() => new Set());
   const [sentenceIdx, setSentenceIdx] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
   const progressRef = useRef(product.progress);
   const updateProgressRef = useRef(product.updateLessonProgress);
   const listeningStartedAtRef = useRef<number | null>(null);
   const translationRequestRef = useRef(0);
   const autoplayedLessonRef = useRef<string | null>(null);
 
-  const tokens = useMemo(() => tokenizeLesson(lesson?.content ?? ''), [lesson?.content]);
+  const pages = useMemo(
+    () => paginate(splitSentences(lesson?.content ?? '', lesson?.language || 'en'), lesson?.language || 'en'),
+    [lesson?.content, lesson?.language],
+  );
+  const tokens = useMemo(
+    () => tokenizeLesson(pages[currentPage]?.sentences.map((s) => s.text).join(' ') ?? lesson?.content ?? ''),
+    [pages, currentPage, lesson?.content],
+  );
   const sentences = useMemo(
     () => lesson?.content.match(/[^.!?]+[.!?]*/g)?.map((s) => s.trim()).filter(Boolean) ?? (lesson?.content ? [lesson.content] : []),
     [lesson?.content],
@@ -69,6 +76,18 @@ export default function LessonScreen() {
     () => new Map(product.vocabulary.map((item) => [item.normalizedTerm, item])),
     [product.vocabulary],
   );
+  const lessonStats = useMemo(() => {
+    const allTokens = tokenizeLesson(lesson?.content ?? '');
+    const unique = new Set(allTokens.map((t) => t.normalized).filter(Boolean));
+    let newW = 0, savedW = 0;
+    for (const norm of unique) {
+      const v = savedTerms.get(norm);
+      if (!v) newW++;
+      else if (v.status !== 4) savedW++;
+    }
+    const total = unique.size || 1;
+    return { newPercent: Math.round((newW / total) * 100), savedPercent: Math.round((savedW / total) * 100) };
+  }, [lesson?.content, savedTerms]);
 
   useEffect(() => {
     progressRef.current = product.progress;
@@ -320,6 +339,18 @@ export default function LessonScreen() {
         </Pressable>
       </View>
 
+      <View style={styles.statsRow}>
+        <View style={styles.statBadge}>
+          <Text style={styles.statBadgeText}>{lessonStats.newPercent}% nou.</Text>
+        </View>
+        <View style={[styles.statBadge, styles.statBadgeSaved]}>
+          <Text style={[styles.statBadgeText, styles.statBadgeTextSaved]}>{lessonStats.savedPercent}% sauv.</Text>
+        </View>
+        {pages.length > 1 && (
+          <Text style={styles.pageIndicator}>p. {currentPage + 1}/{pages.length}</Text>
+        )}
+      </View>
+
       <View style={styles.lessonHeader}>
         <Image
           source={getLessonCover(lesson.id)}
@@ -384,6 +415,28 @@ export default function LessonScreen() {
       </GestureDetector>
 
       <View style={[styles.readerFooter, { paddingBottom: Math.max(10, insets.bottom) }]}>
+        {pages.length > 1 && (
+          <View style={styles.pageNavRow}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Page précédente"
+              disabled={currentPage === 0}
+              onPress={() => setCurrentPage((p) => p - 1)}
+              style={[styles.pageNavButton, currentPage === 0 && styles.pageNavDisabled]}>
+              <SymbolView name="chevron.left" tintColor={currentPage === 0 ? productTheme.mutedLight : productTheme.blue} size={16} />
+            </Pressable>
+            <Text style={styles.pageNavLabel}>Page {currentPage + 1} / {pages.length}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Page suivante"
+              disabled={currentPage === pages.length - 1}
+              onPress={() => setCurrentPage((p) => p + 1)}
+              style={[styles.pageNavButton, currentPage === pages.length - 1 && styles.pageNavDisabled]}>
+              <SymbolView name="chevron.right" tintColor={currentPage === pages.length - 1 ? productTheme.mutedLight : productTheme.blue} size={16} />
+            </Pressable>
+          </View>
+        )}
+        <View style={styles.footerActions}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={playing || audioLoading ? 'Arrêter la lecture' : 'Écouter la leçon'}
@@ -416,6 +469,7 @@ export default function LessonScreen() {
           <SymbolView name="rectangle.stack.fill" tintColor={productTheme.inkSoft} size={19} />
           <Text style={styles.reviewCount}>{savedInLesson.length}</Text>
         </Pressable>
+        </View>
       </View>
 
       <WordSheet
@@ -869,17 +923,72 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: productTheme.greenDark,
   },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 17,
+    paddingBottom: 6,
+  },
+  statBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: '#CDE8F6',
+  },
+  statBadgeSaved: {
+    backgroundColor: '#BFE2C8',
+  },
+  statBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1A5F8A',
+  },
+  statBadgeTextSaved: {
+    color: '#164F2A',
+  },
+  pageIndicator: {
+    marginLeft: 4,
+    fontSize: 11,
+    color: productTheme.muted,
+  },
   readerFooter: {
     position: 'absolute',
     right: 0,
     bottom: 0,
     left: 0,
-    minHeight: 72,
     paddingHorizontal: 12,
     paddingTop: 9,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: productTheme.line,
     backgroundColor: 'rgba(255,255,255,.97)',
+    flexDirection: 'column',
+    gap: 6,
+  },
+  pageNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  pageNavButton: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageNavDisabled: {
+    opacity: 0.4,
+  },
+  pageNavLabel: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 13,
+    fontWeight: '600',
+    color: productTheme.ink,
+  },
+  footerActions: {
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
