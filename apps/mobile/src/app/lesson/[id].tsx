@@ -7,11 +7,13 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { dictionary, getWordCount, normalizeWord } from '@/lib/catalog';
 import { getLessonCover } from '@/lib/lesson-covers';
@@ -51,6 +53,7 @@ export default function LessonScreen() {
   const [phraseLoading, setPhraseLoading] = useState(false);
   const [phraseError, setPhraseError] = useState('');
   const [seen, setSeen] = useState<Set<string>>(() => new Set());
+  const [sentenceIdx, setSentenceIdx] = useState(0);
   const progressRef = useRef(product.progress);
   const updateProgressRef = useRef(product.updateLessonProgress);
   const listeningStartedAtRef = useRef<number | null>(null);
@@ -58,6 +61,10 @@ export default function LessonScreen() {
   const autoplayedLessonRef = useRef<string | null>(null);
 
   const tokens = useMemo(() => tokenizeLesson(lesson?.content ?? ''), [lesson?.content]);
+  const sentences = useMemo(
+    () => lesson?.content.match(/[^.!?]+[.!?]*/g)?.map((s) => s.trim()).filter(Boolean) ?? (lesson?.content ? [lesson.content] : []),
+    [lesson?.content],
+  );
   const savedTerms = useMemo(
     () => new Map(product.vocabulary.map((item) => [item.normalizedTerm, item])),
     [product.vocabulary],
@@ -227,6 +234,21 @@ export default function LessonScreen() {
     setSelected(null);
   };
 
+  const swipeGesture = Gesture.Pan()
+    .runOnJS(true)
+    .activeOffsetX([-20, 20])
+    .failOffsetY([-15, 15])
+    .onEnd((e) => {
+      if (Math.abs(e.translationX) < 40) return;
+      const next =
+        e.translationX < 0
+          ? Math.min(sentenceIdx + 1, sentences.length - 1)
+          : Math.max(sentenceIdx - 1, 0);
+      if (next === sentenceIdx) return;
+      setSentenceIdx(next);
+      void openPhraseTranslation(sentences[next]);
+    });
+
   const completeLesson = () => {
     flushListening();
     product.updateLessonProgress(lesson.id, {
@@ -237,8 +259,8 @@ export default function LessonScreen() {
     router.replace({ pathname: '/lesson-complete', params: { id: lesson.id } });
   };
 
-  const openPhraseTranslation = async () => {
-    const source = selected?.context || tokens[0]?.context || lesson.content;
+  const openPhraseTranslation = async (src?: string) => {
+    const source = src ?? selected?.context ?? tokens[0]?.context ?? lesson.content;
     const request = ++translationRequestRef.current;
     setPhraseSource(source);
     setPhraseTranslation('');
@@ -311,6 +333,7 @@ export default function LessonScreen() {
         </View>
       </View>
 
+      <GestureDetector gesture={swipeGesture}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.reader, { paddingBottom: 142 + insets.bottom }]}>
@@ -358,6 +381,7 @@ export default function LessonScreen() {
           <Text style={styles.finishText}>Terminer la leçon</Text>
         </Pressable>
       </ScrollView>
+      </GestureDetector>
 
       <View style={[styles.readerFooter, { paddingBottom: Math.max(10, insets.bottom) }]}>
         <Pressable
@@ -376,7 +400,7 @@ export default function LessonScreen() {
           accessibilityLabel="Afficher les phrases et les traductions"
           onPress={() => {
             product.updatePreferences({ phraseMode: true });
-            void openPhraseTranslation();
+            void openPhraseTranslation(sentences[sentenceIdx]);
           }}
           style={[styles.phraseButton, product.preferences.phraseMode && styles.phraseButtonActive]}>
           <SymbolView name="text.bubble" tintColor={productTheme.inkSoft} size={18} />
@@ -420,12 +444,25 @@ export default function LessonScreen() {
         translation={phraseTranslation}
         loading={phraseLoading}
         error={phraseError}
+        canPrev={sentenceIdx > 0}
+        canNext={sentenceIdx < sentences.length - 1}
         onClose={() => {
           translationRequestRef.current += 1;
           setPhraseOpen(false);
         }}
         onSpeak={() => void speakIsolatedText(phraseSource)}
         onSpeakSlow={() => void speakIsolatedText(phraseSource, 0.68)}
+        onShare={() => void Share.share({ message: phraseSource })}
+        onPrev={() => {
+          const next = Math.max(sentenceIdx - 1, 0);
+          setSentenceIdx(next);
+          void openPhraseTranslation(sentences[next]);
+        }}
+        onNext={() => {
+          const next = Math.min(sentenceIdx + 1, sentences.length - 1);
+          setSentenceIdx(next);
+          void openPhraseTranslation(sentences[next]);
+        }}
       />
 
       <LessonMenu
@@ -552,18 +589,28 @@ function PhraseSheet({
   translation,
   loading,
   error,
+  canPrev,
+  canNext,
   onClose,
   onSpeak,
   onSpeakSlow,
+  onShare,
+  onPrev,
+  onNext,
 }: {
   open: boolean;
   source: string;
   translation: string;
   loading: boolean;
   error: string;
+  canPrev: boolean;
+  canNext: boolean;
   onClose(): void;
   onSpeak(): void;
   onSpeakSlow(): void;
+  onShare(): void;
+  onPrev(): void;
+  onNext(): void;
 }) {
   return (
     <Modal transparent visible={open} animationType="fade" onRequestClose={onClose}>
@@ -577,6 +624,13 @@ function PhraseSheet({
               <Text style={styles.wordLanguage}>anglais → français</Text>
             </View>
             <View style={styles.phraseAudioActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Partager la phrase"
+                onPress={onShare}
+                style={styles.slowSpeechButton}>
+                <SymbolView name="square.and.arrow.up" tintColor={productTheme.blue} size={19} />
+              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Écouter lentement"
@@ -604,9 +658,27 @@ function PhraseSheet({
               <Text style={styles.phraseTranslation}>{translation || error}</Text>
             )}
           </View>
-          <Pressable accessibilityRole="button" onPress={onClose} style={styles.phraseDoneButton}>
-            <Text style={styles.phraseDoneText}>Continuer la lecture</Text>
-          </Pressable>
+          <View style={styles.phraseNavRow}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Phrase précédente"
+              disabled={!canPrev}
+              onPress={onPrev}
+              style={[styles.phraseNavButton, !canPrev && styles.phraseNavDisabled]}>
+              <SymbolView name="chevron.left" tintColor={canPrev ? productTheme.blue : productTheme.mutedLight} size={18} />
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={onClose} style={styles.phraseDoneButton}>
+              <Text style={styles.phraseDoneText}>Continuer la lecture</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Phrase suivante"
+              disabled={!canNext}
+              onPress={onNext}
+              style={[styles.phraseNavButton, !canNext && styles.phraseNavDisabled]}>
+              <SymbolView name="chevron.right" tintColor={canNext ? productTheme.blue : productTheme.mutedLight} size={18} />
+            </Pressable>
+          </View>
         </SafeAreaView>
       </View>
     </Modal>
@@ -1075,6 +1147,7 @@ const styles = StyleSheet.create({
     color: productTheme.inkSoft,
   },
   phraseDoneButton: {
+    flex: 1,
     minHeight: 52,
     marginTop: 16,
     borderRadius: 9,
@@ -1086,6 +1159,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  phraseNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 4,
+  },
+  phraseNavButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: productTheme.surface,
+  },
+  phraseNavDisabled: {
+    opacity: 0.35,
   },
   menuSheet: {
     paddingHorizontal: 18,
