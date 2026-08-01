@@ -23,11 +23,12 @@ interface TranslationPanelProps {
 }
 
 const statuses: { value: LearningStatus; label: string }[] = [
-  { value: 1, label: 'Nouveau' },
-  { value: 2, label: 'En apprentissage 2' },
-  { value: 3, label: 'En apprentissage 3' },
-  { value: 4, label: 'Presque connu' },
+  { value: 1, label: 'Nouveau (1)' },
+  { value: 2, label: 'En apprentissage (2)' },
+  { value: 3, label: 'En apprentissage (3)' },
+  { value: 4, label: 'Presque connu (4)' },
   { value: 'known', label: 'Connu' },
+  { value: 'ignored', label: 'Ignorer' },
 ];
 
 export function TranslationPanel({
