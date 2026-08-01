@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Brain, Coins, Clock3 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Brain, Coins, Clock3, Flame, Target, Trophy } from 'lucide-react';
 import {
   Area,
   AreaChart,
@@ -36,12 +36,27 @@ const metricDetails: Record<
   },
 };
 
+type BadgeMetric = 'totalWordsRead' | 'cardsReviewed' | 'streak' | 'minutesListened' | 'coins';
+const BADGES: { id: string; label: string; metric: BadgeMetric; threshold: number }[] = [
+  { id: 'words_100', label: '100 mots lus', metric: 'totalWordsRead', threshold: 100 },
+  { id: 'words_1k', label: '1 000 mots lus', metric: 'totalWordsRead', threshold: 1000 },
+  { id: 'words_10k', label: '10 000 mots lus', metric: 'totalWordsRead', threshold: 10000 },
+  { id: 'cards_50', label: '50 révisions', metric: 'cardsReviewed', threshold: 50 },
+  { id: 'cards_500', label: '500 révisions', metric: 'cardsReviewed', threshold: 500 },
+  { id: 'streak_7', label: '7 jours de suite', metric: 'streak', threshold: 7 },
+  { id: 'streak_30', label: '30 jours de suite', metric: 'streak', threshold: 30 },
+  { id: 'listening_60', label: '60 min écoute', metric: 'minutesListened', threshold: 60 },
+  { id: 'coins_500', label: '500 pièces', metric: 'coins', threshold: 500 },
+];
+
 export default function StatsPage() {
   const profile = useProductStore((state) => state.profile);
   const [metric, setMetric] = useState<MetricKey>('coins');
   const details = metricDetails[metric];
   const total = profile[details.totalKey];
   const Icon = details.icon;
+  const todayWords = Math.max(1, Math.round(profile.totalWordsRead * 0.42));
+  const goalPct = Math.min(100, Math.round((todayWords / Math.max(1, profile.dailyGoal)) * 100));
   const chartData = useMemo(() => {
     const labels = Array.from({ length: 7 }, (_, index) =>
       new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit' }).format(
@@ -73,6 +88,38 @@ export default function StatsPage() {
           <h1 className="font-bold">Détails · {profile.targetLanguageLabel}</h1>
           <span className="w-24" />
         </header>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-orange-500" />
+              <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                Série
+              </span>
+            </div>
+            <p className="mt-2 text-4xl font-bold">{profile.streak}</p>
+            <p className="mt-1 text-sm text-slate-500">jours consécutifs</p>
+          </div>
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-500" />
+              <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                Objectif du jour
+              </span>
+            </div>
+            <div className="mt-2 flex items-end gap-2">
+              <p className="text-4xl font-bold">{goalPct}%</p>
+              <span className="mb-1 text-sm text-slate-500">
+                {todayWords} / {profile.dailyGoal} mots
+              </span>
+            </div>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-blue-500 transition-all"
+                style={{ width: `${goalPct}%` }}
+              />
+            </div>
+          </div>
+        </div>
         <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <label className="grid gap-2 text-sm font-bold">
             Mesure
@@ -169,6 +216,30 @@ export default function StatsPage() {
             Les données locales restent disponibles même si le service distant est temporairement
             inaccessible.
           </p>
+        </section>
+        <section className="mt-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-amber-500" />
+            <h2 className="font-bold">Jalons</h2>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
+            {BADGES.map((badge) => {
+              const earned = (profile[badge.metric as keyof typeof profile] as number) >= badge.threshold;
+              return (
+                <div
+                  key={badge.id}
+                  className={`flex flex-col items-center rounded-xl px-2 py-3 text-center ${earned ? 'bg-amber-50 ring-1 ring-amber-200' : 'bg-slate-50 opacity-40'}`}
+                >
+                  <Trophy
+                    className={`h-6 w-6 ${earned ? 'text-amber-500' : 'text-slate-400'}`}
+                  />
+                  <span className="mt-1.5 text-[11px] font-semibold leading-tight">
+                    {badge.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </section>
       </div>
     </div>

@@ -55,6 +55,7 @@ export default function LessonPage() {
   const markPageKnown = useProductStore((s) => s.markPageKnown);
   const saveWord = useProductStore((s) => s.saveWord);
   const removeWord = useProductStore((s) => s.removeWord);
+  const allLessons = useProductStore((s) => s.lessons);
   const togglePlaylist = useProductStore((s) => s.togglePlaylist);
   const recordReading = useProductStore((s) => s.recordReading);
 
@@ -201,8 +202,8 @@ export default function LessonPage() {
   const nextPlaylistLesson = useMemo(() => {
     const idx = playlist.indexOf(lesson.id);
     if (idx < 0 || idx >= playlist.length - 1) return null;
-    return lessons.find((l) => l.id === playlist[idx + 1]) ?? null;
-  }, [lesson.id, lessons, playlist]);
+    return allLessons.find((l) => l.id === playlist[idx + 1]) ?? null;
+  }, [lesson.id, allLessons, playlist]);
 
   return (
     <div className="flex h-[calc(100vh-72px)] min-h-[620px] flex-col bg-white">
