@@ -79,6 +79,8 @@ type ProductState = {
   activityDates: string[];
   currentStreak: number;
   coins: number;
+  equippedMascot: string;
+  purchasedMascots: string[];
 };
 
 type PersistedState = Omit<ProductState, 'hydrated'>;
@@ -94,6 +96,8 @@ type Action =
   | { type: 'toggleLikeLesson'; payload: string }
   | { type: 'updateProgress'; payload: LessonProgress }
   | { type: 'updatePreference'; payload: Partial<ProductPreferences> }
+  | { type: 'buyMascot'; payload: { id: string; price: number } }
+  | { type: 'equipMascot'; payload: string }
   | { type: 'resetOnboarding' };
 
 const defaultPersistedState: PersistedState = {
@@ -122,7 +126,9 @@ const defaultPersistedState: PersistedState = {
   },
   activityDates: [],
   currentStreak: 0,
-  coins: 0,
+  coins: 150,
+  equippedMascot: 'outfit-default',
+  purchasedMascots: ['outfit-default'],
 };
 
 const initialState: ProductState = {
@@ -299,6 +305,21 @@ function reducer(state: ProductState, action: Action): ProductState {
       };
     case 'updatePreference':
       return { ...state, preferences: { ...state.preferences, ...action.payload } };
+    case 'buyMascot':
+      if (state.coins >= action.payload.price && !state.purchasedMascots.includes(action.payload.id)) {
+        return {
+          ...state,
+          coins: state.coins - action.payload.price,
+          purchasedMascots: [...state.purchasedMascots, action.payload.id],
+          equippedMascot: action.payload.id,
+        };
+      }
+      return state;
+    case 'equipMascot':
+      if (state.purchasedMascots.includes(action.payload)) {
+        return { ...state, equippedMascot: action.payload };
+      }
+      return state;
     case 'resetOnboarding':
       return { ...state, onboardingCompleted: false };
     default:
@@ -321,6 +342,7 @@ type ProductContextValue = ProductState & {
   ): void;
   updatePreferences(input: Partial<ProductPreferences>): void;
   resetOnboarding(): void;
+  dispatch: React.Dispatch<Action>;
   playlist: string[];
   removeFromPlaylist(id: string): void;
   stats: { wordsRead: number; streakDays: number };
@@ -490,8 +512,9 @@ export function ProductStoreProvider({ children }: PropsWithChildren) {
       dueVocabulary,
       knownWords,
       totalWordsRead,
+      dispatch,
     }),
-    [dueVocabulary, importLesson, knownWords, saveWord, state, totalWordsRead, updateLessonProgress],
+    [dueVocabulary, importLesson, knownWords, saveWord, state, totalWordsRead, updateLessonProgress, dispatch],
   );
 
   return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>;

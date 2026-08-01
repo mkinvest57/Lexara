@@ -14,6 +14,7 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react';
+import { isKnown, isSavedStatus } from '@yapro/core';
 import { useProductStore } from '@/lib/product-store';
 
 export default function ProfilePage() {
@@ -22,8 +23,8 @@ export default function ProfilePage() {
   const updateProfile = useProductStore((state) => state.updateProfile);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(profile.name);
-  const knownWords = words.filter((word) => word.status === 5).length;
-  const learningWords = words.filter((word) => word.status < 5).length;
+  const knownWords = words.filter((word) => isKnown(word.status)).length;
+  const learningWords = words.filter((word) => isSavedStatus(word.status)).length;
   const goalPercent = Math.min(100, Math.round((profile.coins / profile.dailyGoal) * 100));
   const weekdayLabels = useMemo(() => {
     const formatter = new Intl.DateTimeFormat('fr-FR', { weekday: 'short' });

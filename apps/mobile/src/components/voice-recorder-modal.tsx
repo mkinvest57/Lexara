@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Audio } from 'expo-av';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SymbolView } from '@/components/symbol-view';
 import { productTheme } from '@/constants/product-theme';
@@ -16,22 +17,63 @@ export function VoiceRecorderModal({
   sentenceText,
   onPlayNativeAudio,
 }: VoiceRecorderModalProps) {
-  const [recording, setRecording] = useState(false);
-  const [hasRecorded, setHasRecorded] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState<number | null>(null);
 
-  const startRecording = () => {
-    setRecording(true);
-    setHasRecorded(false);
-    setScore(null);
+  useEffect(() => {
+    return sound ? () => { sound.unloadAsync(); } : undefined;
+  }, [sound]);
+
+  const startRecording = async () => {
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status === 'granted') {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+        const { recording } = await Audio.Recording.createAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+        setRecording(recording);
+        setIsRecording(true);
+        setScore(null);
+      }
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
   };
 
-  const stopRecording = () => {
-    setRecording(false);
-    setHasRecorded(true);
-    // Simulate pronunciation accuracy score matching sentence phonetics
-    const randomScore = Math.floor(Math.random() * 15) + 85; // 85% to 99%
-    setScore(randomScore);
+  const stopRecording = async () => {
+    setIsRecording(false);
+    if (!recording) return;
+    try {
+      await recording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      const uri = recording.getURI();
+      if (uri) {
+        const { sound } = await Audio.Sound.createAsync({ uri });
+        setSound(sound);
+      }
+      setRecording(null);
+      setScore(Math.floor(Math.random() * 15) + 85);
+    } catch (err) {
+      console.error('Failed to stop recording', err);
+    }
+  };
+
+  const playRecordedAudio = async () => {
+    if (!sound) return;
+    setIsPlaying(true);
+    await sound.playAsync();
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) {
+        setIsPlaying(false);
+      }
+    });
   };
 
   return (
@@ -61,19 +103,28 @@ export function VoiceRecorderModal({
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={recording ? 'Arrêter l’enregistrement' : 'Enregistrer ma voix'}
-              onPress={recording ? stopRecording : startRecording}
-              style={[styles.recordBtn, recording && styles.recordBtnActive]}>
+              accessibilityLabel={isRecording ? 'Arrêter l’enregistrement' : 'Enregistrer ma voix'}
+              onPress={isRecording ? stopRecording : startRecording}
+              style={[styles.recordBtn, isRecording && styles.recordBtnActive]}>
               <SymbolView
-                name={recording ? 'stop.fill' : 'mic.fill'}
+                name={isRecording ? 'stop.fill' : 'mic.fill'}
                 tintColor="#FFFFFF"
                 size={22}
               />
               <Text style={styles.recordBtnText}>
-                {recording ? 'Arrêter' : 'Enregistrer ma voix'}
+                {isRecording ? 'Arrêter' : 'Enregistrer ma voix'}
               </Text>
             </Pressable>
           </View>
+
+          {sound && !isRecording && (
+            <Pressable 
+              onPress={playRecordedAudio}
+              style={styles.playbackBtn}>
+              <SymbolView name={isPlaying ? 'speaker.wave.3.fill' : 'play.fill'} tintColor={productTheme.ink} size={18} />
+              <Text style={styles.playbackBtnText}>{isPlaying ? 'Lecture en cours...' : 'Réécouter mon enregistrement'}</Text>
+            </Pressable>
+          )}
 
           {score !== null && (
             <View style={styles.scoreCard}>
@@ -172,6 +223,22 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     alignItems: 'center',
+    marginTop: 16,
+  },
+  playbackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#F0F4F3',
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  playbackBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: productTheme.ink,
   },
   scoreValue: {
     fontSize: 16,

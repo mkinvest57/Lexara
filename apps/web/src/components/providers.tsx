@@ -1,9 +1,9 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SessionProvider } from 'next-auth/react';
 import { useState } from 'react';
 import { ProductSync } from '@/components/product-sync';
+import { AuthProvider } from '@/lib/auth';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -19,11 +19,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <SessionProvider>
+    <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <ProductSync />
         {children}
       </QueryClientProvider>
-    </SessionProvider>
+    </AuthProvider>
   );
 }

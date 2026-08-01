@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import {
   BarChart3,
   ChevronDown,
@@ -25,9 +25,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useProductStore } from '@/lib/product-store';
+import { useAuth } from '@/lib/auth';
 
 export function AppHeader() {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const profile = useProductStore((state) => state.profile);
   const syncStatus = useProductStore((state) => state.syncStatus);
 
@@ -125,10 +127,12 @@ export function AppHeader() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            {session ? (
+            {user ? (
               <DropdownMenuItem
                 className="min-h-10 rounded-xl px-3"
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => {
+                  void signOut().then(() => router.push('/'));
+                }}
               >
                 <LogOut className="mr-3 h-4 w-4" />
                 Déconnexion

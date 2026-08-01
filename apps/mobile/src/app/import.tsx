@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { SymbolView } from '@/components/symbol-view';
 import {
@@ -75,6 +76,31 @@ export default function ImportLessonScreen() {
       } finally {
         setPending(false);
       }
+    } else if (mode === 'youtube') {
+      if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+        setError('Veuillez entrer un lien YouTube valide.');
+        return;
+      }
+      setPending(true);
+      try {
+        const response = await fetch(`http://localhost:3000/api/youtube?url=${encodeURIComponent(url)}`);
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || 'Erreur lors de la récupération des sous-titres.');
+        }
+        const data = await response.json();
+        
+        // Extract video ID for title
+        const videoId = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/)?.[1] || 'vidéo';
+        
+        setTitle(`Leçon YouTube (${videoId})`);
+        setContent(data.text || '');
+        setStep(2);
+      } catch (err: any) {
+        setError(err.message || 'Erreur réseau');
+      } finally {
+        setPending(false);
+      }
     } else {
       if (!title.trim() || content.trim().split(/\s+/).length < 5) {
         setError('Entrez un titre et au moins 5 mots pour votre leçon.');
@@ -102,7 +128,9 @@ export default function ImportLessonScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.closeBtn}>
+        <Pressable
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+          style={styles.closeBtn}>
           <SymbolView name="chevron.left" tintColor={productTheme.ink} size={20} />
         </Pressable>
         <Text style={styles.headerTitle}>Importer une leçon</Text>
@@ -188,10 +216,32 @@ export default function ImportLessonScreen() {
                   </Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => {
+                  onPress={async () => {
                     setMode('camera');
-                    setTitle('Scan Photo OCR');
-                    setContent('Texte extrait par scanner photo : Une après-midi ensoleillée dans la ville. Les gens se promènent et échangent avec le sourire.');
+                    try {
+                      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                      if (status !== 'granted') {
+                        setError('Permission pour accéder aux photos refusée.');
+                        return;
+                      }
+                      
+                      const result = await ImagePicker.launchImageLibraryAsync({
+                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                        allowsEditing: true,
+                        quality: 1,
+                      });
+                      
+                      if (!result.canceled && result.assets[0]) {
+                        setTitle('Scan Photo OCR');
+                        // In a real app we would send the image to a cloud vision OCR API.
+                        // For the simulation we'll insert a mock result.
+                        setContent('Texte extrait par scanner photo : Une après-midi ensoleillée dans la ville. Les gens se promènent et échangent avec le sourire.');
+                      } else {
+                        setMode('text');
+                      }
+                    } catch (err) {
+                      setError('Erreur avec la galerie de photos');
+                    }
                   }}
                   style={[styles.modeTab, mode === 'camera' && styles.modeTabActive]}>
                   <SymbolView
@@ -212,6 +262,19 @@ export default function ImportLessonScreen() {
                     value={url}
                     onChangeText={setUrl}
                     placeholder="https://example.com/article"
+                    placeholderTextColor="#A0A5B0"
+                    autoCapitalize="none"
+                    keyboardType="url"
+                    style={styles.input}
+                  />
+                </View>
+              ) : mode === 'youtube' ? (
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Lien de la vidéo YouTube</Text>
+                  <TextInput
+                    value={url}
+                    onChangeText={setUrl}
+                    placeholder="https://www.youtube.com/watch?v=..."
                     placeholderTextColor="#A0A5B0"
                     autoCapitalize="none"
                     keyboardType="url"
@@ -482,7 +545,7 @@ const styles = StyleSheet.create({
   textarea: {
     minHeight: 140,
     paddingTop: 12,
-    paddingBottom: 12,
+    paddingBottom: 120,
   },
   errorText: {
     marginBottom: 12,

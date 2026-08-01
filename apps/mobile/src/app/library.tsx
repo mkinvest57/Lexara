@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getWordCount } from '@/lib/catalog';
 import { getLessonCover } from '@/lib/lesson-covers';
+import { BottomTabs } from '@/components/bottom-tabs';
 import { useProduct } from '@/lib/product-store';
 import { productTheme } from '@/constants/product-theme';
 
@@ -33,7 +34,7 @@ export default function SearchLibraryScreen() {
       <View style={styles.header}>
         <Pressable
           accessibilityLabel="Fermer la recherche"
-          onPress={router.back}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
           style={styles.iconButton}>
           <SymbolView name="chevron.left" tintColor={productTheme.ink} size={20} />
         </Pressable>
@@ -142,6 +143,7 @@ export default function SearchLibraryScreen() {
           </View>
         )}
       </ScrollView>
+      <BottomTabs active="library" />
     </SafeAreaView>
   );
 }
@@ -229,7 +231,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingBottom: 38,
+    paddingBottom: 120,
   },
   resultCount: {
     marginVertical: 9,

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check, CircleEllipsis, RotateCcw, Volume2, X } from 'lucide-react';
+import { isDue, isSavedStatus } from '@yapro/core';
 import { useProductStore, type SavedWord } from '@/lib/product-store';
 import { speakEnglishWeb } from '@/lib/speech';
 
@@ -13,7 +14,7 @@ export default function ReviewPage() {
   const dueWords = useMemo(() => {
     const now = Date.now();
     const due = words.filter(
-      (word) => word.status < 5 && new Date(word.nextReview).getTime() <= now
+      (word) => isSavedStatus(word.status) && isDue(word.nextReviewAt, new Date(now))
     );
     return due.slice(0, preferences.dailyReviewSize);
   }, [preferences.dailyReviewSize, words]);
@@ -41,7 +42,7 @@ export default function ReviewPage() {
     setChoice(value);
     const correct = value === current.translation;
     if (correct) setScore((valueScore) => valueScore + 1);
-    reviewWord(current.id, correct);
+    reviewWord(current.id, correct ? 'good' : 'again');
     window.setTimeout(() => {
       if (index + 1 >= queue.length) setFinished(true);
       else {

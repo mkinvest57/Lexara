@@ -1,11 +1,11 @@
 'use client';
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import {
   ArrowLeft,
   ArrowRight,
+  Camera,
   Check,
   ClipboardPaste,
   FileText,
@@ -13,7 +13,6 @@ import {
   Loader2,
   Upload,
 } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
 import { useProductStore } from '@/lib/product-store';
 
 type SourceType = 'text' | 'web' | 'file' | 'youtube' | 'camera';
@@ -52,24 +51,22 @@ const sourceOptions: {
     id: 'camera',
     title: 'Scanner Photo OCR',
     copy: 'Numérisez une page de livre ou une image avec du texte.',
-    icon: Upload,
+    icon: Camera,
   },
 ];
 
 export default function ImportPage() {
   const router = useRouter();
-  const { data: session } = useSession();
-  const token = (session as { accessToken?: string } | null)?.accessToken;
   const importLesson = useProductStore((state) => state.importLesson);
-  const mergeRemote = useProductStore((state) => state.mergeRemote);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [source, setSource] = useState<SourceType>('text');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
-  const [level, setLevel] = useState<'debutant-1' | 'debutant-2' | 'intermediaire-1'>('debutant-1');
+  const [level, setLevel] = useState<'beginner' | 'beginner_2' | 'intermediate'>('beginner');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const wordCount = useMemo(() => content.trim().split(/\s+/).filter(Boolean).length, [content]);
   const canContinue =
@@ -98,52 +95,36 @@ export default function ImportPage() {
     if (!title) setTitle(file.name.replace(/\.(txt|md)$/i, ''));
   };
 
+  const handleOcrFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setError('');
+    // Mock OCR extraction
+    setContent('Texte extrait par scanner photo : Une après-midi ensoleillée dans la ville. Les gens se promènent et échangent avec le sourire.');
+    setTitle('Scan Photo OCR');
+    setStep(2);
+  };
+
   const createLesson = async () => {
     if (!canContinue) return;
     setBusy(true);
     setError('');
-    const common = {
-      title: title.trim(),
-      content: content.trim(),
-      type: source === 'web' ? 'Article web' : source === 'file' ? 'Document' : 'Texte',
-      level,
-      levelLabel:
-        level === 'debutant-1'
-          ? 'Débutant 1'
-          : level === 'debutant-2'
-            ? 'Débutant 2'
-            : 'Intermédiaire 1',
-      collection: 'Leçons importées',
-      image: '/brand/immerli-hero.png',
-      translation: 'Ajoutez votre traduction depuis le lecteur.',
-      duration: `${Math.max(1, Math.ceil(wordCount / 120))
-        .toString()
-        .padStart(2, '0')}:00`,
-      sourceUrl: sourceUrl.trim() || undefined,
-    } as const;
 
     try {
-      if (token) {
-        try {
-          const profile = await apiClient.getLanguageProfile(token);
-          const remoteLesson = await apiClient.createLesson(token, {
-            profileId: profile.id,
-            title: common.title,
-            content: common.content,
-            type: common.type,
-            level: level.startsWith('debutant') ? 'beginner' : 'intermediate',
-            sourceUrl: common.sourceUrl,
-          });
-          mergeRemote({ lessons: [{ ...remoteLesson, imported: true, imageUrl: common.image }] });
-          router.push(`/lesson/${remoteLesson.id}`);
-          return;
-        } catch {
-          // The local copy below is the intentional offline fallback.
-        }
-      }
-
-      const lesson = importLesson(common);
+      // The store writes to Supabase and falls back to a local lesson when
+      // offline, so there is no separate remote branch here.
+      const lesson = await importLesson({
+        title: title.trim(),
+        content: content.trim(),
+        kind: source === 'web' ? 'article' : source === 'file' ? 'book' : 'story',
+        level,
+        coverImageUrl: '/brand/immerli-hero.png',
+        translation: 'Ajoutez votre traduction depuis le lecteur.',
+        sourceUrl: sourceUrl.trim() || undefined,
+      });
       router.push(`/lesson/${lesson.id}`);
+    } catch {
+      setError("L'import a échoué. Vérifiez votre connexion et réessayez.");
     } finally {
       setBusy(false);
     }
@@ -151,6 +132,7 @@ export default function ImportPage() {
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-[#f1f3f4] px-4 py-8 sm:px-8 lg:px-12">
+      <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleOcrFile} />
       <div className="mx-auto max-w-[1260px]">
         <ol className="grid grid-cols-3 gap-2" aria-label="Progression de l’import">
           {(
@@ -200,9 +182,13 @@ export default function ImportPage() {
                   key={id}
                   type="button"
                   onClick={() => {
-                    setSource(id);
-                    setStep(2);
-                    setError('');
+                    if (id === 'camera') {
+                      fileInputRef.current?.click();
+                    } else {
+                      setSource(id);
+                      setStep(2);
+                      setError('');
+                    }
                   }}
                   className="flex min-h-[260px] flex-col items-center justify-center px-8 py-10 text-center transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-blue-500/25"
                 >
@@ -271,6 +257,49 @@ export default function ImportPage() {
                     />
                   </label>
                 )}
+                {source === 'youtube' && (
+                  <label className="grid gap-2 text-sm font-bold">
+                    Lien vidéo YouTube
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={sourceUrl}
+                        onChange={(event) => setSourceUrl(event.target.value)}
+                        placeholder="https://youtube.com/watch?v=..."
+                        name="lesson-youtube-url"
+                        autoComplete="off"
+                        className="h-12 flex-1 rounded-xl border border-slate-300 px-4 font-normal outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15"
+                      />
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={async () => {
+                          if (!sourceUrl.includes('youtube.com') && !sourceUrl.includes('youtu.be')) {
+                            setError('Veuillez entrer un lien YouTube valide.');
+                            return;
+                          }
+                          setBusy(true);
+                          setError('');
+                          try {
+                            const res = await fetch(`/api/youtube?url=${encodeURIComponent(sourceUrl)}`);
+                            if (!res.ok) throw new Error('Erreur');
+                            const data = await res.json();
+                            setContent(data.text || '');
+                            const videoId = sourceUrl.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/)?.[1] || 'vidéo';
+                            setTitle(`Leçon YouTube (${videoId})`);
+                          } catch (err) {
+                            setError('Impossible de récupérer les sous-titres.');
+                          } finally {
+                            setBusy(false);
+                          }
+                        }}
+                        className="inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-6 font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        Importer
+                      </button>
+                    </div>
+                  </label>
+                )}
                 <label className="grid gap-2 text-sm font-bold">
                   Texte de la leçon
                   <textarea
@@ -292,9 +321,9 @@ export default function ImportPage() {
                     onChange={(event) => setLevel(event.target.value as typeof level)}
                     className="h-12 rounded-xl border border-slate-300 bg-white px-4 font-normal outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15"
                   >
-                    <option value="debutant-1">Débutant 1</option>
-                    <option value="debutant-2">Débutant 2</option>
-                    <option value="intermediaire-1">Intermédiaire 1</option>
+                    <option value="beginner">Débutant 1</option>
+                    <option value="beginner_2">Débutant 2</option>
+                    <option value="intermediate">Intermédiaire 1</option>
                   </select>
                 </label>
                 {error && (
@@ -342,9 +371,9 @@ export default function ImportPage() {
                     <div>
                       <dt className="text-slate-400">Niveau</dt>
                       <dd className="mt-1 font-semibold">
-                        {level === 'debutant-1'
+                        {level === 'beginner'
                           ? 'Débutant 1'
-                          : level === 'debutant-2'
+                          : level === 'beginner_2'
                             ? 'Débutant 2'
                             : 'Intermédiaire 1'}
                       </dd>

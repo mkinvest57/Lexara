@@ -69,7 +69,7 @@ export default function ChallengesScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Pressable accessibilityLabel="Retour" onPress={router.back} style={styles.headerButton}>
+        <Pressable accessibilityLabel="Retour" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={styles.headerButton}>
           <SymbolView name="chevron.left" tintColor={productTheme.ink} size={20} />
         </Pressable>
         <Text style={styles.headerTitle}>Défis & Classement</Text>
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   sectionTitle: {
     fontSize: 11,

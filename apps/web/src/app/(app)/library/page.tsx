@@ -15,16 +15,18 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react';
+import { lessonView, type Lesson } from '@yapro/core';
 import { LessonCard } from '@/components/library/LessonCard';
-import { useProductStore, type ProductLesson } from '@/lib/product-store';
+import { useProductStore } from '@/lib/product-store';
 
 const levels = [
   ['tous', 'Tous niveaux'],
-  ['debutant-1', 'Débutant 1'],
-  ['debutant-2', 'Débutant 2'],
-  ['intermediaire-1', 'Intermédiaire 1'],
-  ['intermediaire-2', 'Intermédiaire 2'],
-  ['avance', 'Avancé'],
+  ['beginner', 'Débutant 1'],
+  ['beginner_2', 'Débutant 2'],
+  ['intermediate', 'Intermédiaire 1'],
+  ['intermediate_2', 'Intermédiaire 2'],
+  ['advanced', 'Avancé 1'],
+  ['advanced_2', 'Avancé 2'],
 ] as const;
 
 type LibraryView = 'continue' | 'lessons' | 'playlist' | 'imports';
@@ -49,14 +51,16 @@ export default function LibraryPage() {
     return lessons.filter((lesson) => {
       const matchesQuery =
         !query ||
-        `${lesson.title} ${lesson.collection} ${lesson.type}`.toLocaleLowerCase().includes(query);
+        `${lesson.title} ${lesson.collection ?? ''} ${lesson.kind}`
+          .toLocaleLowerCase()
+          .includes(query);
       const matchesLevel = level === 'tous' || lesson.level === level;
       const matchesFavorites = !onlyFavorites || favorites.includes(lesson.id);
       const matchesView = searchingEntireLibrary
         ? true
         : view === 'lessons' ||
           (view === 'playlist' && playlist.includes(lesson.id)) ||
-          (view === 'imports' && lesson.imported) ||
+          (view === 'imports' && lessonView(lesson).imported) ||
           (view === 'continue' && (readingProgress[lesson.id] || playlist.includes(lesson.id)));
       return matchesQuery && matchesLevel && matchesFavorites && matchesView;
     });
@@ -74,16 +78,16 @@ export default function LibraryPage() {
 
   const searchMode = Boolean(search.trim() || level !== 'tous' || onlyFavorites || showFilters);
   const collections = useMemo(() => {
-    const groups = new Map<string, ProductLesson[]>();
+    const groups = new Map<string, Lesson[]>();
     lessons.forEach((lesson) => {
       if (view === 'playlist' && !playlist.includes(lesson.id)) return;
-      if (view === 'imports' && !lesson.imported) return;
+      if (view === 'imports' && !lessonView(lesson).imported) return;
       const key =
         view === 'continue'
           ? lesson.collection === 'Mini-histoires'
             ? 'Mini-histoires'
             : 'Pour vous'
-          : lesson.collection;
+          : (lesson.collection ?? 'Ma bibliothèque');
       groups.set(key, [...(groups.get(key) || []), lesson]);
     });
     return [...groups.entries()];
@@ -270,7 +274,7 @@ function SearchResults({
   resetFilters,
   showFilters,
 }: {
-  lessons: ProductLesson[];
+  lessons: Lesson[];
   level: string;
   setLevel: (level: string) => void;
   onlyFavorites: boolean;
@@ -363,26 +367,27 @@ function SearchResults({
   );
 }
 
-function SearchLessonRow({ lesson }: { lesson: ProductLesson }) {
+function SearchLessonRow({ lesson }: { lesson: Lesson }) {
   const playlist = useProductStore((state) => state.playlist);
   const togglePlaylist = useProductStore((state) => state.togglePlaylist);
   const inPlaylist = playlist.includes(lesson.id);
+  const view = lessonView(lesson);
   return (
     <article className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:grid-cols-[152px_1fr_auto]">
       <div className="relative min-h-36 sm:min-h-0">
-        <Image src={lesson.image} alt="" fill sizes="152px" className="object-cover" />
+        <Image src={view.image} alt="" fill sizes="152px" className="object-cover" />
       </div>
       <div className="min-w-0 p-4">
         <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
-          {lesson.collection}
+          {view.collection}
         </p>
         <h2 className="mt-1 truncate text-lg font-bold">{lesson.title}</h2>
         <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
           <span>{lesson.wordCount} mots</span>
-          <span>{lesson.levelLabel}</span>
+          <span>{view.levelLabel}</span>
           <span className="inline-flex items-center gap-1">
             <Clock3 className="h-4 w-4" />
-            {lesson.duration}
+            {view.duration}
           </span>
         </p>
       </div>

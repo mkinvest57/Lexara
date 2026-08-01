@@ -8,35 +8,47 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { apiClient } from '@/lib/api-client';
-import { signIn } from 'next-auth/react';
 import { BrandMark } from '@/components/brand/BrandMark';
+import { useAuth } from '@/lib/auth';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signUp, configured } = useAuth();
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
+    setNotice('');
+
+    if (!configured) {
+      setError(
+        "La synchronisation n'est pas configurée sur cette installation. Continuez en mode local sur cet appareil."
+      );
+      return;
+    }
+
     setLoading(true);
     try {
-      await apiClient.signup(formData);
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
-      if (result?.error) {
-        setError('Your account was created, but automatic login failed. Please log in.');
-      } else {
-        router.push('/dashboard');
-        router.refresh();
+      const { needsConfirmation } = await signUp(
+        formData.email,
+        formData.password,
+        formData.name.trim() || undefined
+      );
+      if (needsConfirmation) {
+        setNotice('Compte créé. Confirmez votre adresse email, puis connectez-vous.');
+        return;
       }
-    } catch (caught: any) {
-      setError(caught.message || 'We could not create your account. Please try again.');
+      router.push('/library');
+      router.refresh();
+    } catch (caught) {
+      setError(
+        (caught as { message?: string })?.message ||
+          "Nous n'avons pas pu créer votre compte. Réessayez."
+      );
     } finally {
       setLoading(false);
     }
@@ -94,6 +106,11 @@ export default function SignupPage() {
                 {error && (
                   <div role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
                     {error}
+                  </div>
+                )}
+                {notice && (
+                  <div role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
+                    {notice}
                   </div>
                 )}
                 <div className="space-y-2">

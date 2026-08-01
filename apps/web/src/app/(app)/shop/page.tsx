@@ -13,9 +13,14 @@ type MascotOutfit = {
 };
 
 export default function WebShopPage() {
-  const coins = useProductStore((state) => (state as any).coins ?? 150);
-  const [purchased, setPurchased] = useState<Set<string>>(() => new Set(['outfit-default']));
-  const [equipped, setEquipped] = useState('outfit-default');
+  const { profile, equippedMascot, purchasedMascots, buyMascot, equipMascot } = useProductStore((state) => ({
+    profile: state.profile,
+    equippedMascot: state.equippedMascot,
+    purchasedMascots: state.purchasedMascots,
+    buyMascot: state.buyMascot,
+    equipMascot: state.equipMascot,
+  }));
+  const coins = profile.coins;
 
   const outfits: MascotOutfit[] = [
     {
@@ -49,13 +54,12 @@ export default function WebShopPage() {
   ];
 
   const buyOrEquip = (item: MascotOutfit) => {
-    if (purchased.has(item.id)) {
-      setEquipped(item.id);
+    if (purchasedMascots.includes(item.id)) {
+      equipMascot(item.id);
       return;
     }
     if (coins >= item.price) {
-      setPurchased((prev) => new Set(prev).add(item.id));
-      setEquipped(item.id);
+      buyMascot(item.id, item.price);
     }
   };
 
@@ -77,9 +81,9 @@ export default function WebShopPage() {
         </header>
 
         <section className="rounded-3xl bg-teal-900 p-8 text-center text-white shadow-xl">
-          <div className="text-7xl">{outfits.find((o) => o.id === equipped)?.emoji || '🦊'}</div>
+          <div className="text-7xl">{outfits.find((o) => o.id === equippedMascot)?.emoji || '🦊'}</div>
           <h2 className="mt-4 font-display text-2xl font-bold">
-            {outfits.find((o) => o.id === equipped)?.name || 'Mascotte YAPRO'}
+            {outfits.find((o) => o.id === equippedMascot)?.name || 'Mascotte YAPRO'}
           </h2>
           <p className="mt-2 text-sm text-teal-200">
             Votre mascotte évolue au fil de vos lectures quotidiennes.
@@ -88,8 +92,8 @@ export default function WebShopPage() {
 
         <section className="grid gap-6 sm:grid-cols-2">
           {outfits.map((item) => {
-            const isOwned = purchased.has(item.id);
-            const isEquipped = equipped === item.id;
+            const isOwned = purchasedMascots.includes(item.id);
+            const isEquipped = equippedMascot === item.id;
             const canAfford = coins >= item.price;
 
             return (

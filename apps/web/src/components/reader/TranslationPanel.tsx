@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { BookMarked, Check, Loader2, Trash2, Volume2, X } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
+import { statusBarLevel } from '@yapro/core';
+import { requestTranslation } from '@/lib/translate';
 import { speakEnglishWeb } from '@/lib/speech';
 import {
   translations,
@@ -15,7 +16,6 @@ interface TranslationPanelProps {
   word: string;
   sentence: string;
   sourceLanguage?: string;
-  token?: string;
   savedWord?: SavedWord;
   onSave: (translation: string, status: LearningStatus) => void | Promise<void>;
   onRemove?: () => void;
@@ -27,7 +27,7 @@ const statuses: { value: LearningStatus; label: string }[] = [
   { value: 2, label: 'En apprentissage 2' },
   { value: 3, label: 'En apprentissage 3' },
   { value: 4, label: 'Presque connu' },
-  { value: 5, label: 'Connu' },
+  { value: 'known', label: 'Connu' },
 ];
 
 export function TranslationPanel({
@@ -36,7 +36,6 @@ export function TranslationPanel({
   onSave,
   onRemove,
   onClose,
-  token,
   sourceLanguage = 'en',
   savedWord,
 }: TranslationPanelProps) {
@@ -48,23 +47,29 @@ export function TranslationPanel({
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<LearningStatus>(savedWord?.status || 1);
   const [message, setMessage] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     setMeaning(savedWord?.translation || translations[word.toLocaleLowerCase()] || '');
     setStatus(savedWord?.status || 1);
     setMessage('');
+    setSuggestions([]);
   }, [savedWord, word]);
 
   useEffect(() => {
-    if (!token || savedWord?.translation || translations[word.toLocaleLowerCase()]) return;
+    if (savedWord?.translation || translations[word.toLocaleLowerCase()]) return;
+    const controller = new AbortController();
     let active = true;
     const translate = async () => {
       setLoading(true);
       try {
-        const response = await apiClient.translate(token, word, 'fr', sentence, sourceLanguage);
-        if (active && response.translatedText) setMeaning(response.translatedText);
-      } catch {
-        if (active) setMessage('Traduction automatique indisponible : ajoutez votre propre sens.');
+        const result = await requestTranslation(word, 'fr', sourceLanguage, controller.signal);
+        if (!active) return;
+        if (result.translatedText) setMeaning(result.translatedText);
+        setSuggestions(result.alternatives);
+      } catch (error) {
+        if (active && (error as { name?: string })?.name !== 'AbortError')
+          setMessage('Traduction automatique indisponible : ajoutez votre propre sens.');
       } finally {
         if (active) setLoading(false);
       }
@@ -72,8 +77,9 @@ export function TranslationPanel({
     void translate();
     return () => {
       active = false;
+      controller.abort();
     };
-  }, [savedWord?.translation, sentence, sourceLanguage, token, word]);
+  }, [savedWord?.translation, sourceLanguage, word]);
 
   const speak = () => void speakEnglishWeb(word, { rate: Math.min(0.86, speechRate) });
 
@@ -88,7 +94,7 @@ export function TranslationPanel({
     try {
       await onSave(meaning.trim(), nextStatus);
       setMessage(
-        nextStatus === 5 ? 'Mot marqué comme connu.' : 'Mot sauvegardé dans votre vocabulaire.'
+        nextStatus === 'known' ? 'Mot marqué comme connu.' : 'Mot sauvegardé dans votre vocabulaire.'
       );
     } finally {
       setSaving(false);
@@ -153,7 +159,7 @@ export function TranslationPanel({
         <section className="mt-7">
           <h3 className="text-sm font-bold">Traductions suggérées</h3>
           <div className="mt-3 space-y-2">
-            {[localMeaning, savedWord?.translation, word.toLocaleLowerCase()]
+            {[localMeaning, savedWord?.translation, ...suggestions]
               .filter(
                 (value, index, list): value is string =>
                   Boolean(value) && list.indexOf(value) === index
@@ -207,11 +213,11 @@ export function TranslationPanel({
               type="button"
               disabled={saving}
               onClick={() => void save(value)}
-              className={`grid h-11 w-11 shrink-0 place-items-center rounded-full border text-sm font-bold transition ${status === value && savedWord ? (value === 1 ? 'border-amber-400 bg-amber-200' : value === 5 ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-blue-400 bg-blue-50 text-blue-700') : 'border-slate-300 bg-white text-slate-600 hover:border-blue-400'}`}
+              className={`grid h-11 w-11 shrink-0 place-items-center rounded-full border text-sm font-bold transition ${status === value && savedWord ? (value === 1 ? 'border-amber-400 bg-amber-200' : value === 'known' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-blue-400 bg-blue-50 text-blue-700') : 'border-slate-300 bg-white text-slate-600 hover:border-blue-400'}`}
               aria-label={`Définir le statut : ${label}`}
               title={label}
             >
-              {value === 5 ? <Check className="h-4 w-4" /> : value}
+              {value === 'known' ? <Check className="h-4 w-4" /> : statusBarLevel(value)}
             </button>
           ))}
           {!savedWord && (

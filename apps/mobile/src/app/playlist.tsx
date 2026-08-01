@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView } from '@/components/symbol-view';
+import { BottomTabs } from '@/components/bottom-tabs';
 import { productTheme } from '@/constants/product-theme';
 import { useProduct } from '@/lib/product-store';
 
@@ -23,8 +24,8 @@ export default function PlaylistScreen() {
             <SymbolView name="music.note.list" tintColor="#FFFFFF" size={20} />
           </View>
           <View style={styles.headerTitles}>
-            <Text style={styles.headerTitle}>Active Playlist</Text>
-            <Pressable onPress={() => router.push('/')} style={styles.changeRow}>
+            <Text style={styles.headerTitle}>Liste de lecture active</Text>
+            <Pressable onPress={() => router.push('/library')} style={styles.changeRow}>
               <Text style={styles.changeText}>Changer de Playlist</Text>
               <SymbolView name="chevron.right" tintColor={productTheme.muted} size={13} />
             </Pressable>
@@ -96,7 +97,7 @@ export default function PlaylistScreen() {
                   <Text style={styles.trackTitle}>{lesson!.title}</Text>
                   <Text style={styles.trackMeta}>
                     {Math.floor((lesson!.durationSeconds || 120) / 60)}:
-                    {String((lesson!.durationSeconds || 120) % 60).padStart(2, '0')} · 0,0x écoutes
+                    {String((lesson!.durationSeconds || 120) % 60).padStart(2, '0')}
                   </Text>
                 </View>
                 <Pressable
@@ -109,6 +110,7 @@ export default function PlaylistScreen() {
           </View>
         )}
       </ScrollView>
+      <BottomTabs active="playlist" />
     </SafeAreaView>
   );
 }
@@ -167,7 +169,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingBottom: 80,
+    paddingBottom: 120,
   },
   primaryPlayButton: {
     minHeight: 48,

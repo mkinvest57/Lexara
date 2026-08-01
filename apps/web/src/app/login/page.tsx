@@ -1,6 +1,5 @@
 'use client';
 
-import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -10,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BrandMark } from '@/components/brand/BrandMark';
+import { useAuth } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn, configured } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,26 +22,29 @@ export default function LoginPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
+
+    if (!configured) {
+      setError(
+        "La synchronisation n'est pas configurée sur cette installation. Continuez en mode local sur cet appareil."
+      );
+      return;
+    }
+
     setLoading(true);
     try {
-      const result = await signIn('credentials', { email, password, redirect: false });
-      if (result?.error === 'API_UNAVAILABLE') {
-        setError('The learning service is temporarily unavailable. Please try again in a moment.');
-      } else if (result?.error) setError('The email or password is incorrect.');
-      else {
-        router.push('/dashboard');
-        router.refresh();
-      }
-    } catch {
-      setError('We could not log you in. Please try again.');
+      await signIn(email, password);
+      router.push('/library');
+      router.refresh();
+    } catch (signInError) {
+      const message = (signInError as { message?: string })?.message ?? '';
+      setError(
+        /confirm/i.test(message)
+          ? "Confirmez votre adresse email avant de vous connecter."
+          : "L'email ou le mot de passe est incorrect."
+      );
     } finally {
       setLoading(false);
     }
-  };
-
-  const useDemo = () => {
-    setEmail('demo@immerli.com');
-    setPassword('demo123456');
   };
 
   return (
@@ -143,12 +147,6 @@ export default function LoginPage() {
               </form>
             </CardContent>
           </Card>
-          <button
-            onClick={useDemo}
-            className="min-h-11 w-full rounded-2xl border border-teal-100 bg-teal-50 p-3 text-center text-sm font-medium text-teal-950 hover:bg-teal-100"
-          >
-            Fill in the demo account
-          </button>
           <Link
             href="/library"
             className="flex min-h-11 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"

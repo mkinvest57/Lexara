@@ -11,39 +11,53 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiClient } from '@/lib/api-client';
+import { requestTranslation } from '@/lib/translate';
 import { Loader2 } from 'lucide-react';
 
 interface WordModalProps {
   word: string;
   sentence: string;
+  /** Language of `word`; the meaning is always shown in the interface language. */
+  sourceLanguage?: string;
   onClose: () => void;
   onSave: (translation: string) => void;
-  token: string;
 }
 
-export function WordModal({ word, sentence, onClose, onSave, token }: WordModalProps) {
+export function WordModal({
+  word,
+  sentence,
+  sourceLanguage = 'en',
+  onClose,
+  onSave,
+}: WordModalProps) {
   const [translation, setTranslation] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    // Fetch translation
+    const controller = new AbortController();
+    let active = true;
+
     const fetchTranslation = async () => {
+      setFetching(true);
       try {
-        setFetching(true);
-        const result = await apiClient.translate(token, word, 'en', sentence);
-        setTranslation(result.translatedText || word);
+        const result = await requestTranslation(word, 'fr', sourceLanguage, controller.signal);
+        if (active) setTranslation(result.translatedText);
       } catch (error) {
-        console.error('Translation error:', error);
-        setTranslation('');
+        if ((error as { name?: string })?.name !== 'AbortError')
+          console.error('Translation error:', error);
+        if (active) setTranslation('');
       } finally {
-        setFetching(false);
+        if (active) setFetching(false);
       }
     };
 
-    fetchTranslation();
-  }, [word, sentence, token]);
+    void fetchTranslation();
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [sourceLanguage, word]);
 
   const handleSave = async () => {
     if (!translation.trim()) return;

@@ -59,7 +59,7 @@ export default function CoachScreen() {
         style={styles.keyboard}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
-          <Pressable accessibilityLabel="Fermer le coach Immerli" onPress={router.back} style={styles.headerButton}>
+          <Pressable accessibilityLabel="Fermer le coach Immerli" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={styles.headerButton}>
             <SymbolView name="xmark" tintColor={productTheme.ink} size={20} />
           </Pressable>
           <View style={styles.headerCopy}>

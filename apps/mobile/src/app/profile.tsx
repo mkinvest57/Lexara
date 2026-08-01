@@ -20,7 +20,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Pressable accessibilityLabel="Retour" onPress={router.back} style={styles.headerButton}>
+        <Pressable accessibilityLabel="Retour" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={styles.headerButton}>
           <SymbolView name="chevron.left" tintColor={productTheme.ink} size={20} />
         </Pressable>
         <Text style={styles.headerTitle}>Profil</Text>

@@ -83,17 +83,21 @@ export default function LanguagesScreen() {
       targetLanguage: item.id,
       targetLanguageLabel: item.name,
     });
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Pressable accessibilityLabel="Retour" onPress={router.back} style={styles.headerButton}>
+        <Pressable accessibilityLabel="Retour" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={styles.headerButton}>
           <SymbolView name="chevron.left" tintColor={productTheme.ink} size={20} />
         </Pressable>
         <Text style={styles.headerTitle}>Langues d'apprentissage</Text>
-        <Pressable accessibilityLabel="Enregistrer" onPress={router.back} style={styles.doneButton}>
+        <Pressable accessibilityLabel="Enregistrer" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={styles.doneButton}>
           <SymbolView name="checkmark" tintColor="#FFFFFF" size={20} />
         </Pressable>
       </View>

@@ -2,24 +2,16 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import { Check, Download, ExternalLink, Search, SlidersHorizontal, Trash2 } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
+import { STATUS_LABELS, isDue, statusBarLevel } from '@yapro/core';
 import { useProductStore, type LearningStatus, type SavedWord } from '@/lib/product-store';
+import { exportAnkiDeck } from '@/lib/anki-exporter';
 
 type VocabTab = 'all' | 'phrases' | 'due';
 
-const statusLabels: Record<LearningStatus, string> = {
-  1: 'Nouveau',
-  2: 'En apprentissage',
-  3: 'En progression',
-  4: 'Presque connu',
-  5: 'Connu',
-};
+const statusLabels = STATUS_LABELS;
 
 export default function VocabPage() {
-  const { data: session } = useSession();
-  const token = (session as { accessToken?: string } | null)?.accessToken;
   const words = useProductStore((state) => state.words);
   const setWordStatus = useProductStore((state) => state.setWordStatus);
   const removeWord = useProductStore((state) => state.removeWord);
@@ -39,18 +31,14 @@ export default function VocabPage() {
         return false;
       if (statusFilter !== 'all' && word.status !== statusFilter) return false;
       if (tab === 'phrases' && !word.term.includes(' ')) return false;
-      if (tab === 'due' && new Date(word.nextReview).getTime() > now) return false;
+      if (tab === 'due' && !isDue(word.nextReviewAt, new Date(now))) return false;
       return true;
     });
   }, [search, statusFilter, tab, words]);
 
+  // The store owns the remote write; the page only expresses intent.
   const updateStatus = (word: SavedWord, status: LearningStatus) => {
     setWordStatus(word.id, status);
-    if (token && word.remoteId) {
-      void apiClient
-        .updateVocabStatus(token, word.remoteId, Math.min(status, 4))
-        .catch(() => undefined);
-    }
   };
 
   const toggleSelected = (id: string) =>
@@ -121,7 +109,15 @@ export default function VocabPage() {
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold hover:bg-slate-50"
             >
               <Download className="h-4 w-4" />
-              Exporter
+              Exporter (CSV)
+            </button>
+            <button
+              type="button"
+              onClick={() => exportAnkiDeck(words)}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold hover:bg-slate-50"
+            >
+              <Download className="h-4 w-4" />
+              Exporter (Anki)
             </button>
             <Link
               href="/review"
@@ -273,11 +269,11 @@ export default function VocabPage() {
                         key={status}
                         type="button"
                         onClick={() => updateStatus(word, status)}
-                        className={`grid h-10 w-10 place-items-center rounded-full border text-sm font-bold transition ${word.status === status ? (status === 1 ? 'border-amber-400 bg-amber-200' : status === 5 ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-blue-400 bg-blue-50 text-blue-700') : 'border-slate-300 text-slate-500 hover:border-blue-400'}`}
+                        className={`grid h-10 w-10 place-items-center rounded-full border text-sm font-bold transition ${word.status === status ? (status === 1 ? 'border-amber-400 bg-amber-200' : status === 'known' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-blue-400 bg-blue-50 text-blue-700') : 'border-slate-300 text-slate-500 hover:border-blue-400'}`}
                         aria-label={`Marquer ${word.term} comme ${statusLabels[status]}`}
                         title={statusLabels[status]}
                       >
-                        {status === 5 ? <Check className="h-4 w-4" /> : status}
+                        {status === 'known' ? <Check className="h-4 w-4" /> : statusBarLevel(status)}
                       </button>
                     ))}
                   </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Mic, Square, Volume2, X, Sparkles } from 'lucide-react';
 
 interface VoiceRecorderModalProps {
@@ -17,18 +17,67 @@ export function VoiceRecorderModal({
   onPlayNativeAudio,
 }: VoiceRecorderModalProps) {
   const [recording, setRecording] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState<number | null>(null);
+  const [audioURL, setAudioURL] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioURL) URL.revokeObjectURL(audioURL);
+    };
+  }, [audioURL]);
 
   if (!isOpen) return null;
 
-  const startRecording = () => {
-    setRecording(true);
-    setScore(null);
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioURL(url);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setRecording(true);
+      setScore(null);
+      setAudioURL(null);
+    } catch (err) {
+      console.error('Microphone permission denied', err);
+    }
   };
 
   const stopRecording = () => {
-    setRecording(false);
-    setScore(Math.floor(Math.random() * 15) + 85);
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+      setScore(Math.floor(Math.random() * 15) + 85);
+    }
+  };
+
+  const togglePlayback = () => {
+    if (!audioRef.current || !audioURL) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
   };
 
   return (
@@ -80,6 +129,25 @@ export function VoiceRecorderModal({
             )}
           </button>
         </div>
+
+        {audioURL && !recording && (
+          <div className="flex justify-center mt-2">
+            <audio
+              ref={audioRef}
+              src={audioURL}
+              onEnded={() => setIsPlaying(false)}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={togglePlayback}
+              className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-200"
+            >
+              <Volume2 className="h-4 w-4" />
+              {isPlaying ? 'Pause' : 'Réécouter mon enregistrement'}
+            </button>
+          </div>
+        )}
 
         {score !== null && (
           <div className="rounded-2xl bg-emerald-50 p-4 text-center border border-emerald-200">

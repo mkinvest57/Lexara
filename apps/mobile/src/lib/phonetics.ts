@@ -1,70 +1,9 @@
-export type PhoneticMode = 'off' | 'pinyin' | 'furigana' | 'romaji';
+/**
+ * Mobile phonetics entry point.
+ *
+ * No pinyin provider is registered here: `pinyin-pro` would add significant
+ * weight to the native bundle. Mandarin falls back to the built-in tables in
+ * @yapro/core until a lightweight native provider is wired in.
+ */
 
-export function getPhoneticAnnotation(text: string, language: string): string | null {
-  const lang = language.toLowerCase();
-  const clean = text.trim();
-  if (!clean) return null;
-
-  // Japanese Furigana simulation for common Kanji
-  if (lang === 'ja') {
-    const jaMap: Record<string, string> = {
-      '日本語': 'にほんご',
-      '学習': 'がくしゅう',
-      '毎日': 'まいにち',
-      '文章': 'ぶんしょう',
-      '語彙力': 'ごいりょく',
-      '会話': 'かいわ',
-      '単語': 'たんご',
-      '私': 'わたし',
-      '人': 'ひと',
-      '本': 'ほん',
-    };
-    return jaMap[clean] || null;
-  }
-
-  // Chinese Pinyin simulation for common Hanzi
-  if (lang === 'zh' || lang === 'zh-trad') {
-    const zhMap: Record<string, string> = {
-      '汉语': 'hàn yǔ',
-      '学习': 'xué xí',
-      '每天': 'měi tiān',
-      '阅读': 'yuè dú',
-      '听力': 'tīng lì',
-      '词汇': 'cí huì',
-      '表达': 'biǎo dá',
-      '课程': 'kè chéng',
-      '你好': 'nǐ hǎo',
-      '谢谢': 'xiè xie',
-    };
-    return zhMap[clean] || null;
-  }
-
-  // Arabic Romaji / Transliteration
-  if (lang === 'ar') {
-    const arMap: Record<string, string> = {
-      'مرحباً': 'marhaban',
-      'الدرس': 'ad-dars',
-      'العربية': 'al-arabiyyah',
-      'القراءة': 'al-qira\'ah',
-      'الاستماع': 'al-istima\'',
-      'المفردات': 'al-mufradat',
-      'شكراً': 'shukran',
-      'جميل': 'jameel',
-    };
-    return arMap[clean] || null;
-  }
-
-  // Russian Cyrillic Transliteration
-  if (lang === 'ru') {
-    const ruMap: Record<string, string> = {
-      'Привет': 'Privet',
-      'Урок': 'Urok',
-      'русский': 'russkiy',
-      'чтение': 'chteniye',
-      'словарь': 'slovar\'',
-    };
-    return ruMap[clean] || null;
-  }
-
-  return null;
-}
+export { getPhoneticAnnotation, defaultPhoneticMode, type PhoneticMode } from '@yapro/core';

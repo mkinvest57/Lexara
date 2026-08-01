@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { SymbolView } from '@/components/symbol-view';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomTabs } from '@/components/bottom-tabs';
 import { useProduct, type VocabularyStatus } from '@/lib/product-store';
 import { productTheme } from '@/constants/product-theme';
-import { generateAnkiExportText } from '@/lib/anki-exporter';
+import { exportAnkiDeck } from '@/lib/anki-exporter';
 import { speakEnglish } from '@/lib/speech';
 
 type Filter = 'Tout' | 'À apprendre' | 'Connu';
@@ -40,23 +40,6 @@ export default function WordsScreen() {
           <Text style={styles.title}>Vocabulaire</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Exporter le vocabulaire"
-            onPress={() => {
-              const csvContent = 'Term,Translation,Context,Status\n' +
-                product.vocabulary.map((w) => `"${w.term}","${w.translation}","${w.context.replace(/"/g, '""')}",${w.status}`).join('\n');
-              if (typeof window !== 'undefined' && window.document) {
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'lexara-vocabulary.csv';
-                link.click();
-              }
-            }}
-            style={styles.headerButton}>
-            <SymbolView name="square.and.arrow.up" tintColor={productTheme.ink} size={19} />
-          </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Trouver une leçon pour ajouter du vocabulaire"
@@ -160,14 +143,30 @@ export default function WordsScreen() {
                 </View>
               ))}
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Commencer la révision"
-              onPress={() => router.push('/review')}
-              style={styles.reviewButton}>
-              <SymbolView name="brain.head.profile" tintColor="#FFFFFF" size={19} />
-              <Text style={styles.reviewText}>Réviser maintenant</Text>
-            </Pressable>
+            <View style={styles.actionsContainer}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Commencer la révision"
+                onPress={() => router.push('/review')}
+                style={styles.reviewButton}>
+                <SymbolView name="brain.head.profile" tintColor="#FFFFFF" size={19} />
+                <Text style={styles.reviewText}>Réviser</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Exporter vers Anki"
+                onPress={async () => {
+                  try {
+                    await exportAnkiDeck(vocabulary);
+                  } catch (err) {
+                    Alert.alert('Erreur', 'Impossible d’exporter le fichier Anki.');
+                  }
+                }}
+                style={styles.exportButton}>
+                <SymbolView name="square.and.arrow.up" tintColor={productTheme.ink} size={19} />
+                <Text style={styles.exportText}>Exporter</Text>
+              </Pressable>
+            </View>
           </>
         ) : (
           <View style={styles.empty}>
@@ -381,20 +380,43 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: productTheme.blue,
   },
+  actionsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   reviewButton: {
+    marginTop: 19,
     minHeight: 52,
-    marginTop: 18,
-    borderRadius: 10,
-    backgroundColor: productTheme.green,
+    backgroundColor: productTheme.ink,
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 9,
+    flex: 1,
   },
   reviewText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
+  },
+  exportButton: {
+    marginTop: 19,
+    minHeight: 52,
+    backgroundColor: productTheme.surface,
+    borderWidth: 1,
+    borderColor: productTheme.lineSoft,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    flex: 1,
+  },
+  exportText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: productTheme.ink,
   },
   empty: {
     marginTop: 80,

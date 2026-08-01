@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import {
   ArrowLeft,
   BookOpenText,
@@ -17,8 +16,8 @@ import {
   Type,
   Volume2,
 } from 'lucide-react';
+import { coverImage, lessonView } from '@yapro/core';
 import { TranslationPanel } from '@/components/reader/TranslationPanel';
-import { apiClient } from '@/lib/api-client';
 import { speakEnglishWeb, stopWebSpeech } from '@/lib/speech';
 import {
   normalizeWord,
@@ -43,8 +42,6 @@ interface ReaderToken {
 
 export default function LessonPage() {
   const params = useParams<{ id: string }>();
-  const { data: session } = useSession();
-  const token = (session as { accessToken?: string } | null)?.accessToken;
   const lesson = useProductStore((state) => state.lessons.find((item) => item.id === params.id));
   const words = useProductStore((state) => state.words);
   const playlist = useProductStore((state) => state.playlist);
@@ -53,18 +50,22 @@ export default function LessonPage() {
   const removeWord = useProductStore((state) => state.removeWord);
   const togglePlaylist = useProductStore((state) => state.togglePlaylist);
   const recordReading = useProductStore((state) => state.recordReading);
-  const mergeRemote = useProductStore((state) => state.mergeRemote);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [exploredIds, setExploredIds] = useState<Set<string>>(new Set());
   const [showMeaning, setShowMeaning] = useState(false);
   const [fontTools, setFontTools] = useState(false);
-  const [fontSize, setFontSize] = useState(preferences.readerFontSize);
+  const [fontSize, setFontSize] = useState(preferences.fontSize);
   const [isPlaying, setIsPlaying] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [remoteLessonError, setRemoteLessonError] = useState('');
   const readingRef = useRef<HTMLDivElement>(null);
   const initializedLesson = useRef<string | null>(null);
   const autoPlayedLesson = useRef<string | null>(null);
+
+  const view = useMemo(
+    () => (lesson ? lessonView(lesson) : null),
+    [lesson]
+  );
 
   const readerTokens = useMemo(() => {
     if (!lesson) return [];
@@ -117,25 +118,14 @@ export default function LessonPage() {
     });
   }, [lesson, preferences.autoPlayAudio, preferences.speechRate]);
 
+  // The store loads full lesson content from Supabase up front, so an empty
+  // body here means the row itself is incomplete rather than not yet fetched.
   useEffect(() => {
-    if (!lesson || lesson.content || !token) return;
-    let active = true;
-    setRemoteLessonError('');
-    apiClient
-      .getLesson(token, lesson.id)
-      .then((fullLesson) => {
-        if (active) mergeRemote({ lessons: [fullLesson] });
-      })
-      .catch(() => {
-        if (active)
-          setRemoteLessonError(
-            'Cette leçon distante ne peut pas être chargée. Revenez à la bibliothèque et réessayez quand le service est disponible.'
-          );
-      });
-    return () => {
-      active = false;
-    };
-  }, [lesson, mergeRemote, token]);
+    if (!lesson || lesson.content) return;
+    setRemoteLessonError(
+      'Cette leçon ne contient pas de texte. Revenez à la bibliothèque et réessayez quand le service est disponible.'
+    );
+  }, [lesson]);
 
   const selectedToken = readerTokens.find((item) => item.id === selectedTokenId);
   const savedByTerm = useMemo(
@@ -304,11 +294,17 @@ export default function LessonPage() {
           <div className="mx-auto max-w-[760px] px-6 pb-32 pt-10 sm:px-10 lg:pt-14">
             <header className="flex items-center gap-4">
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-                <Image src={lesson.image} alt="" fill sizes="64px" className="object-cover" />
+                <Image
+                  src={coverImage(lesson)}
+                  alt=""
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
               </div>
               <div className="min-w-0">
                 <h1 className="truncate text-xl font-bold">{lesson.title}</h1>
-                <p className="mt-1 text-base text-slate-500">{lesson.collection}</p>
+                <p className="mt-1 text-base text-slate-500">{view?.collection}</p>
               </div>
             </header>
 
@@ -408,7 +404,6 @@ export default function LessonPage() {
               word={selectedToken.raw}
               sentence={selectedToken.sentence}
               sourceLanguage="en"
-              token={token}
               savedWord={selectedSavedWord}
               onSave={saveSelectedWord}
               onRemove={

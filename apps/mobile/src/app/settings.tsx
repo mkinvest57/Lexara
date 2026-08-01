@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { SymbolView } from '@/components/symbol-view';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProduct } from '@/lib/product-store';
 import { getPreferredEnglishVoice, speakEnglish } from '@/lib/speech';
 import { productTheme } from '@/constants/product-theme';
@@ -11,6 +11,7 @@ type Tab = 'App' | 'Langues' | 'Lecteur' | 'Réviser';
 
 export default function SettingsScreen() {
   const product = useProduct();
+  const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>('App');
   const [voiceName, setVoiceName] = useState('Voix anglaise du système');
 
@@ -27,11 +28,11 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Pressable accessibilityLabel="Fermer les paramètres" onPress={router.back} style={styles.headerButton}>
+        <Pressable accessibilityLabel="Fermer les paramètres" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={styles.headerButton}>
           <SymbolView name="chevron.left" tintColor={productTheme.ink} size={20} />
         </Pressable>
         <Text style={styles.headerTitle}>paramètres</Text>
-        <Pressable accessibilityLabel="Enregistrer et fermer" onPress={router.back} style={styles.doneButton}>
+        <Pressable accessibilityLabel="Enregistrer et fermer" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={styles.doneButton}>
           <SymbolView name="checkmark" tintColor="#FFFFFF" size={20} />
         </Pressable>
       </View>
@@ -46,7 +47,9 @@ export default function SettingsScreen() {
           </Pressable>
         ))}
       </View>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]}>
         {tab === 'App' ? (
           <>
             <SectionTitle>COMPTE</SectionTitle>

@@ -50,7 +50,7 @@ export default function SettingsPage() {
   };
 
   const speechRate = preferences?.speechRate ?? 0.9;
-  const readerFontSize = preferences?.readerFontSize ?? 18;
+  const fontSize = preferences?.fontSize ?? 18;
   const dailyReviewSize = preferences?.dailyReviewSize ?? 10;
 
   return (
@@ -149,15 +149,15 @@ export default function SettingsPage() {
                     type="range"
                     min="16"
                     max="30"
-                    value={readerFontSize}
+                    value={fontSize}
                     onChange={(event) =>
-                      updatePreferences({ readerFontSize: Number(event.target.value) })
+                      updatePreferences({ fontSize: Number(event.target.value) })
                     }
                     onPointerUp={() => announceSaved('Taille du texte')}
                     className="w-40 accent-[#0b1c2d]"
                     aria-label="Taille du texte"
                   />
-                  <strong className="w-12 text-sm">{readerFontSize}px</strong>
+                  <strong className="w-12 text-sm">{fontSize}px</strong>
                 </div>
               </SettingRow>
               <SettingRow
@@ -200,7 +200,7 @@ export default function SettingsPage() {
                 <p className="text-sm font-bold">Aperçu</p>
                 <p
                   className="mt-3 font-medium leading-[2]"
-                  style={{ fontSize: readerFontSize }}
+                  style={{ fontSize: fontSize }}
                 >
                   Every story becomes easier when you keep reading.
                 </p>

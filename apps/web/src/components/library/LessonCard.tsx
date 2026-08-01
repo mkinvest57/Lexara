@@ -3,23 +3,28 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { BookmarkPlus, Check, Clock3, Heart, ListPlus } from 'lucide-react';
-import type { ProductLesson } from '@/lib/product-store';
+import { computeLessonStats, lessonView, type Lesson } from '@yapro/core';
 import { useProductStore } from '@/lib/product-store';
 
-export function LessonCard({
-  lesson,
-  priority = false,
-}: {
-  lesson: ProductLesson;
-  priority?: boolean;
-}) {
+export function LessonCard({ lesson, priority = false }: { lesson: Lesson; priority?: boolean }) {
   const favorites = useProductStore((state) => state.favorites);
   const playlist = useProductStore((state) => state.playlist);
   const progress = useProductStore((state) => state.readingProgress[lesson.id] || 0);
   const toggleFavorite = useProductStore((state) => state.toggleFavorite);
   const togglePlaylist = useProductStore((state) => state.togglePlaylist);
+  const statusIndex = useProductStore((state) => state.statusIndex);
+  // statusVersion is the render trigger: statusIndex mutates in place.
+  useProductStore((state) => state.statusVersion);
+
   const isFavorite = favorites.includes(lesson.id);
   const isQueued = playlist.includes(lesson.id);
+  const view = lessonView(lesson);
+
+  // Percentages reflect this learner's vocabulary, not a static field.
+  const stats = computeLessonStats(lesson.content, lesson.languageCode, (lemma) =>
+    statusIndex.get(lemma)
+  );
+
   const progressPercent = Math.min(
     100,
     Math.round((progress / Math.max(1, lesson.wordCount)) * 100)
@@ -33,7 +38,7 @@ export function LessonCard({
       >
         <div className="relative h-[154px] overflow-hidden bg-slate-200">
           <Image
-            src={lesson.image}
+            src={view.image}
             alt=""
             fill
             sizes="278px"
@@ -50,7 +55,7 @@ export function LessonCard({
             </span>
             <span className="flex items-center gap-1.5">
               <Clock3 className="h-3.5 w-3.5" />
-              {lesson.duration}
+              {view.duration}
             </span>
           </div>
           {progressPercent > 0 && (
@@ -68,9 +73,9 @@ export function LessonCard({
           </h3>
           <p className="mt-3 flex items-center gap-1.5 text-[13px] text-slate-600">
             <span className="h-2 w-2 rounded-full bg-blue-500" />
-            {lesson.unknownPercent}% nouveaux mots
+            {stats.newPercent}% nouveaux mots
           </p>
-          <p className="mt-2 truncate text-[13px] text-slate-400">{lesson.collection}</p>
+          <p className="mt-2 truncate text-[13px] text-slate-400">{view.collection}</p>
         </div>
       </Link>
       <div className="absolute right-2.5 top-2.5 flex gap-1.5">

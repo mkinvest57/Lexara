@@ -17,8 +17,9 @@ type MascotOutfit = {
 
 export default function MascotShopScreen() {
   const product = useProduct();
-  const [purchased, setPurchased] = useState<Set<string>>(() => new Set(['outfit-default']));
-  const [equipped, setEquipped] = useState('outfit-default');
+  
+  const purchased = new Set(product.purchasedMascots || ['outfit-default']);
+  const equipped = product.equippedMascot || 'outfit-default';
 
   const outfits: MascotOutfit[] = [
     {
@@ -50,26 +51,25 @@ export default function MascotShopScreen() {
       name: 'Renard Couronné',
       price: 500,
       emoji: '🦊👑',
-      description: 'Réservé aux champions avec plus de 1000 mots lues.',
+      description: 'Réservé aux champions avec plus de 1000 mots lus.',
       unlocked: purchased.has('outfit-crown'),
     },
   ];
 
   const buyOrEquip = (item: MascotOutfit) => {
     if (purchased.has(item.id)) {
-      setEquipped(item.id);
+      product.dispatch({ type: 'equipMascot', payload: item.id });
       return;
     }
     if (product.coins >= item.price) {
-      setPurchased((prev) => new Set(prev).add(item.id));
-      setEquipped(item.id);
+      product.dispatch({ type: 'buyMascot', payload: { id: item.id, price: item.price } });
     }
   };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Pressable accessibilityLabel="Retour" onPress={router.back} style={styles.backButton}>
+        <Pressable accessibilityLabel="Retour" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={styles.backButton}>
           <SymbolView name="chevron.left" tintColor={productTheme.ink} size={22} />
         </Pressable>
         <Text style={styles.headerTitle}>Boutique & Mascotte YAPRO</Text>
