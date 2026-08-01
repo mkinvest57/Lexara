@@ -1,80 +1,83 @@
-# Immerli
+# YAPRO
 
 **Turn real-world content into language you remember.**
 
-Immerli is an immersion-first language-learning product. Learners can open or import a lesson, tap any word for an in-context meaning, save vocabulary, listen to pronunciation, and review with spaced repetition.
+YAPRO is an immersion-first language-learning app inspired by LingQ. Import any content, tap words for in-context definitions, build vocabulary with spaced repetition, and track your progress across 50+ target languages.
 
-## What works today
+## Features
 
-- Responsive marketing site and authenticated web app
-- Demo sign-in and first-time account setup
-- Searchable, level-filtered lesson library
-- Manual text import with automatic sentence and token creation
-- Interactive reader with translation, pronunciation, and saved-word states
-- Vocabulary collection, spaced-repetition review, goals, and progress statistics
-- Expo SDK 57 app foundation for iOS, Android, and web
-- Supabase Postgres/RLS production schema ready to apply after project approval
-- Vercel production configuration without embedded secrets
+- **Reader** — real word-status colouring (new / learning 1–4 / known), paginated lessons, sentence mode, karaoke mode, inline translation, AI coach (Lynx)
+- **Vocabulary & SRS** — 5 review activities (flashcard, reverse, cloze, dictation, multiple choice) powered by ts-fsrs
+- **Import** — paste text, fetch a web article (Readability), YouTube (subtitles + AI transcription), EPUB, PDF
+- **Library** — Netflix-style shelves, unified search, level filters
+- **Audio** — TTS with speed presets, background playback on mobile
+- **Playlists** — create, reorder, shuffle, sequential playback
+- **Stats & gamification** — streak, daily goal, coins, milestone badges, activity graphs
+- **AI** — Lynx in-reader coach, AI translation, lesson simplification (Supabase Edge Functions, no client-side API keys)
+- **Dark mode** — full support on web and mobile
+- **Mobile** — Expo SDK 57 (iOS + Android), phrase swipe, share extension
+
+## Stack
+
+| Layer | Tech |
+|-------|------|
+| Web | Next.js 15 (App Router, TypeScript) |
+| Mobile | Expo SDK 57 + Expo Router |
+| Backend | Supabase (Postgres + RLS + Edge Functions) |
+| UI | shadcn/ui + Tailwind CSS |
+| SRS | ts-fsrs |
+| Monorepo | pnpm workspaces |
 
 ## Repository
 
-```text
+```
 apps/
-  api/       NestJS API and local Prisma/SQLite development database
-  mobile/    Expo Router native app
-  web/       Next.js web product
-packages/    Shared workspace packages
-prototypes/  Protected iPhone/Pixel visual prototype
-supabase/    Production Postgres schema and RLS policies
-screens/     Product reference captures supplied for design research
+  web/        Next.js web app (@yapro/web)
+  mobile/     Expo native app (@yapro/mobile)
+packages/
+  core/       Shared logic — SRS engine, tokenizer, word statuses, phonetics
+  types/      Shared TypeScript types
+  ui/         Shared UI primitives
+  config/     Shared tooling config
+supabase/     Postgres schema, RLS policies, Edge Functions, seeds
 ```
 
 ## Local development
 
-Requirements: Node.js 22.13 or newer and pnpm 9 or newer.
+Requirements: Node.js 22.13+ and pnpm 9+.
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-The web app runs on `http://localhost:3000` and the API on `http://localhost:3001/api`.
+Web app → `http://localhost:3000`  
+API → `http://localhost:3001`
 
-Run the native app separately:
+Mobile (separate terminal):
 
 ```bash
-pnpm --filter @immerli/mobile start
-```
-
-### Demo account
-
-```text
-Email: demo@immerli.com
-Password: demo123456
+pnpm --filter @yapro/mobile start
 ```
 
 ## Verification
 
 ```bash
 pnpm build
-pnpm --filter @immerli/web type-check
-pnpm --filter @immerli/mobile exec tsc --noEmit
-cd apps/mobile && npx expo-doctor@latest
+pnpm --filter @yapro/web exec tsc --noEmit
+pnpm --filter @yapro/mobile exec tsc --noEmit
 ```
 
-## Production path
+## Supabase
 
-The checked-in Supabase migration contains profiles, multi-language settings,
-lessons, tokenized text, vocabulary, review scheduling, playlists, activity
-logs, explicit Data API grants, and row-level security. Creating the hosted
-Supabase project is intentionally gated on explicit account/cost confirmation.
-See `SUPABASE_BACKEND.md` for the remaining auth integration boundary before
-deployment.
+The migration in `supabase/migrations/` contains 15 tables, 52 RLS policies, and all Edge Functions. Apply it to a new Supabase project:
 
-App Store and Play Store builds are configured through `apps/mobile/eas.json`; final signing and submission require the owner's Expo, Apple Developer, and Google Play credentials.
+```bash
+supabase link --project-ref <your-ref>
+supabase db push
+supabase functions deploy
+```
 
-## Brand
+Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `ANTHROPIC_API_KEY` in your environment.
 
-The working product name is **Immerli**. Live checks showed `immerli.com` and `immerli.app` as available at the time of research, but no domain has been purchased and availability is not reserved.
-
-MIT © 2026 Immerli
+MIT © 2026 YAPRO
