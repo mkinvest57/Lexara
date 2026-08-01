@@ -198,6 +198,11 @@ export default function LessonPage() {
   const totalPages = pages.length || 1;
   const progressPercent = completed ? 100 : Math.round(((currentPage + 1) / totalPages) * 100);
   const rtl = lesson.languageCode ? isRtl(lesson.languageCode) : false;
+  const nextPlaylistLesson = useMemo(() => {
+    const idx = playlist.indexOf(lesson.id);
+    if (idx < 0 || idx >= playlist.length - 1) return null;
+    return lessons.find((l) => l.id === playlist[idx + 1]) ?? null;
+  }, [lesson.id, lessons, playlist]);
 
   return (
     <div className="flex h-[calc(100vh-72px)] min-h-[620px] flex-col bg-white">
@@ -290,7 +295,13 @@ export default function LessonPage() {
                 <p className="mt-2 text-slate-600">Progression et mots explorés enregistrés.</p>
                 <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
                   <Link href="/vocab" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-300 bg-white px-5 text-sm font-bold text-emerald-800">Voir le vocabulaire</Link>
-                  <Link href="/library" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0b1c2d] px-5 text-sm font-bold text-white">Choisir une autre leçon</Link>
+                  {nextPlaylistLesson ? (
+                    <Link href={`/lesson/${nextPlaylistLesson.id}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#0b1c2d] px-5 text-sm font-bold text-white">
+                      Leçon suivante <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <Link href="/library" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0b1c2d] px-5 text-sm font-bold text-white">Choisir une autre leçon</Link>
+                  )}
                 </div>
               </div>
             ) : (

@@ -95,6 +95,7 @@ interface ProductState {
   importLesson: (input: ImportLessonDraft) => Promise<Lesson>;
   toggleFavorite: (lessonId: string) => void;
   togglePlaylist: (lessonId: string) => void;
+  reorderPlaylist: (from: number, to: number) => void;
   recordReading: (lessonId: string, wordsRead: number) => void;
 
   buyMascot: (id: string, price: number) => void;
@@ -467,6 +468,14 @@ export const useProductStore = create<ProductState>()((set, get) => ({
         ? state.playlist.filter((id) => id !== lessonId)
         : [...state.playlist, lessonId],
     })),
+
+  reorderPlaylist: (from, to) =>
+    set((state) => {
+      const next = [...state.playlist];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return { playlist: next };
+    }),
 
   recordReading: (lessonId, wordsRead) => {
     const previous = get().readingProgress[lessonId] ?? 0;
