@@ -32,7 +32,7 @@ const sourceOptions: {
   {
     id: 'web',
     title: 'Lien web',
-    copy: 'Conservez la source puis ajoutez le texte à apprendre.',
+    copy: "Extrayez automatiquement l'article depuis son URL.",
     icon: Globe2,
   },
   {
@@ -134,7 +134,7 @@ export default function ImportPage() {
     <div className="min-h-[calc(100vh-72px)] bg-[#f1f3f4] px-4 py-8 sm:px-8 lg:px-12">
       <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleOcrFile} />
       <div className="mx-auto max-w-[1260px]">
-        <ol className="grid grid-cols-3 gap-2" aria-label="Progression de l’import">
+        <ol className="grid grid-cols-3 gap-2" aria-label="Progression de l'import">
           {(
             [
               [1, 'Choisir la source'],
@@ -170,7 +170,7 @@ export default function ImportPage() {
             <span className="text-blue-600">du contenu réel.</span>
           </h1>
           <p className="mt-3 text-slate-600">
-            Créez une leçon interactive à partir d’un texte que vous avez le droit d’utiliser.
+            Créez une leçon interactive à partir d'un texte que vous avez le droit d'utiliser.
           </p>
         </header>
 
@@ -228,22 +228,51 @@ export default function ImportPage() {
                   />
                 </label>
                 {source === 'web' && (
-                  <label className="grid gap-2 text-sm font-bold">
-                    Lien source
-                    <input
-                      type="url"
-                      value={sourceUrl}
-                      onChange={(event) => setSourceUrl(event.target.value)}
-                      placeholder="https://…"
-                      name="lesson-source-url"
-                      autoComplete="off"
-                      className="h-12 rounded-xl border border-slate-300 px-4 font-normal outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15"
-                    />
+                  <div className="grid gap-2">
+                    <span className="text-sm font-bold">Lien source</span>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={sourceUrl}
+                        onChange={(event) => setSourceUrl(event.target.value)}
+                        placeholder="https://…"
+                        name="lesson-source-url"
+                        autoComplete="off"
+                        className="h-12 flex-1 rounded-xl border border-slate-300 px-4 font-normal outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15"
+                      />
+                      <button
+                        type="button"
+                        disabled={busy || !sourceUrl.trim()}
+                        onClick={async () => {
+                          if (!sourceUrl.trim()) return;
+                          setBusy(true);
+                          setError('');
+                          try {
+                            const res = await fetch(
+                              `/api/extract-article?url=${encodeURIComponent(sourceUrl.trim())}`
+                            );
+                            const data = await res.json();
+                            if (!res.ok)
+                              throw new Error(data.error ?? 'extract_failed');
+                            setContent(data.text ?? '');
+                            if (!title && data.title) setTitle(data.title);
+                          } catch {
+                            setError(
+                              "Impossible d'extraire l'article. Collez le texte manuellement."
+                            );
+                          } finally {
+                            setBusy(false);
+                          }
+                        }}
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Extraire'}
+                      </button>
+                    </div>
                     <span className="text-xs font-normal leading-5 text-slate-500">
-                      Pour respecter les sites sources et éviter les erreurs d’extraction, collez
-                      aussi le texte ci-dessous.
+                      Extraction automatique du texte principal. Editez ensuite si besoin.
                     </span>
-                  </label>
+                  </div>
                 )}
                 {source === 'file' && (
                   <label className="flex min-h-24 cursor-pointer items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 px-4 text-sm font-bold text-slate-600 hover:border-blue-400 hover:bg-blue-50/40">
@@ -282,13 +311,19 @@ export default function ImportPage() {
                           setError('');
                           try {
                             const res = await fetch(`/api/youtube?url=${encodeURIComponent(sourceUrl)}`);
-                            if (!res.ok) throw new Error('Erreur');
                             const data = await res.json();
-                            setContent(data.text || '');
-                            const videoId = sourceUrl.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/)?.[1] || 'vidéo';
-                            setTitle(`Leçon YouTube (${videoId})`);
+                            if (!res.ok) throw new Error(data.hint ?? 'Erreur');
+                            setContent(data.text ?? '');
+                            if (data.title) setTitle(data.title);
+                            else {
+                              const videoId = sourceUrl.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/)?.[1] ?? 'vidéo';
+                              setTitle(`YouTube — ${videoId}`);
+                            }
                           } catch (err) {
-                            setError('Impossible de récupérer les sous-titres.');
+                            setError(
+                              (err as Error).message ||
+                              'Impossible de récupérer les sous-titres. Vérifiez que la vidéo a des sous-titres activés.'
+                            );
                           } finally {
                             setBusy(false);
                           }

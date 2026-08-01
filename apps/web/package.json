@@ -11,7 +11,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@yapro/core": "workspace:*",
+    "@mozilla/readability": "^0.6.0",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-dialog": "^1.1.0",
     "@radix-ui/react-dropdown-menu": "^2.1.0",
@@ -24,8 +24,10 @@
     "@supabase/ssr": "0.12.4",
     "@supabase/supabase-js": "2.111.0",
     "@tanstack/react-query": "^5.51.0",
+    "@yapro/core": "workspace:*",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "linkedom": "^0.18.13",
     "lucide-react": "^0.408.0",
     "next": "^15.0.0",
     "next-auth": "^4.24.0",
