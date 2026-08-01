@@ -3,6 +3,26 @@
 @tailwind utilities;
 
 @layer base {
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 13%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 47% 13%;
+    --popover-foreground: 210 40% 96%;
+    --border: 215 20% 25%;
+    --input: 215 20% 25%;
+    --muted: 215 25% 20%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 215 25% 20%;
+    --accent-foreground: 210 40% 96%;
+  }
+
+  .dark body {
+    background-color: #0f172a;
+    color: #f1f5f9;
+  }
+
   :root {
     /* Immerli reader dimensions */
     --sidebar-width: 280px;

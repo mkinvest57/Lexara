@@ -16,6 +16,14 @@ import { useProductStore } from '@/lib/product-store';
 import { getPreferredEnglishWebVoice, speakEnglishWeb } from '@/lib/speech';
 import { SUPPORTED_LANGUAGES } from '@/lib/catalog';
 
+const FONT_STACKS: Record<string, string> = {
+  system: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  serif: 'Georgia, "Times New Roman", serif',
+  inter: 'var(--font-inter), sans-serif',
+  playfair: 'var(--font-playfair), Georgia, serif',
+  mono: '"Courier New", Courier, monospace',
+};
+
 type SettingsSection = 'general' | 'reader' | 'review' | 'language';
 
 const sections: { id: SettingsSection; label: string; icon: typeof Settings }[] = [
@@ -51,6 +59,8 @@ export default function SettingsPage() {
 
   const speechRate = preferences?.speechRate ?? 0.9;
   const fontSize = preferences?.fontSize ?? 18;
+  const lineHeight = preferences?.lineHeight ?? 1.8;
+  const fontFamily = preferences?.fontFamily ?? 'system';
   const dailyReviewSize = preferences?.dailyReviewSize ?? 10;
 
   return (
@@ -72,7 +82,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <p className="mt-5 px-3 text-sm font-semibold text-slate-700">
-            Paramètres de l’application
+            Paramètres de l'application
           </p>
           <nav
             className="mt-2 space-y-1 border-l border-slate-300 pl-3"
@@ -104,15 +114,24 @@ export default function SettingsPage() {
           )}
           {section === 'general' && (
             <SettingsPanel title="Paramètres généraux">
-              <SettingRow
-                label="Thème"
-                description="L’interface claire est optimisée pour la lecture longue."
-              >
-                <span className="rounded-xl border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold">
-                  Clair
-                </span>
+              <SettingRow label="Thème" description="Affecte l'interface web.">
+                <select
+                  aria-label="Thème"
+                  value={preferences?.theme ?? 'system'}
+                  onChange={(event) => {
+                    updatePreferences({
+                      theme: event.target.value as 'light' | 'dark' | 'system',
+                    });
+                    announceSaved('Thème');
+                  }}
+                  className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+                >
+                  <option value="light">Clair</option>
+                  <option value="dark">Sombre</option>
+                  <option value="system">Automatique (système)</option>
+                </select>
               </SettingRow>
-              <SettingRow label="Langue de l’interface">
+              <SettingRow label="Langue de l'interface">
                 <span className="rounded-xl border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold">
                   Français
                 </span>
@@ -196,11 +215,56 @@ export default function SettingsPage() {
                   <strong className="w-12 text-sm">{speechRate.toFixed(2)}x</strong>
                 </div>
               </SettingRow>
+              <SettingRow
+                label="Police de lecture"
+                description="Appliquée au texte des leçons."
+              >
+                <select
+                  aria-label="Police de lecture"
+                  value={fontFamily}
+                  onChange={(event) => {
+                    updatePreferences({ fontFamily: event.target.value });
+                    announceSaved('Police');
+                  }}
+                  className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15"
+                >
+                  <option value="system">Système · Sans-serif</option>
+                  <option value="inter">Inter</option>
+                  <option value="playfair">Playfair Display · Serif</option>
+                  <option value="serif">Georgia · Serif classique</option>
+                  <option value="mono">Monospace</option>
+                </select>
+              </SettingRow>
+              <SettingRow
+                label="Interlignage"
+                description="Espacement entre les lignes de texte."
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="1.4"
+                    max="2.4"
+                    step="0.1"
+                    value={lineHeight}
+                    onChange={(event) =>
+                      updatePreferences({ lineHeight: Number(event.target.value) })
+                    }
+                    onPointerUp={() => announceSaved('Interlignage')}
+                    className="w-40 accent-[#0b1c2d]"
+                    aria-label="Interlignage"
+                  />
+                  <strong className="w-12 text-sm">{lineHeight.toFixed(1)}</strong>
+                </div>
+              </SettingRow>
               <div className="rounded-xl bg-slate-50 p-5">
                 <p className="text-sm font-bold">Aperçu</p>
                 <p
-                  className="mt-3 font-medium leading-[2]"
-                  style={{ fontSize: fontSize }}
+                  className="mt-3 font-medium"
+                  style={{
+                    fontSize,
+                    lineHeight,
+                    fontFamily: FONT_STACKS[fontFamily] ?? FONT_STACKS.system,
+                  }}
                 >
                   Every story becomes easier when you keep reading.
                 </p>
