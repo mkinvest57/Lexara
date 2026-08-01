@@ -17,6 +17,8 @@ interface ReaderTextProps {
   /** Called on every render; statusVersion from the store drives re-renders. */
   getStatus: (lemma: string) => WordStatus;
   selectedLemma?: string | null;
+  /** Karaoke: highlight the currently-spoken word form. */
+  highlightForm?: string | null;
   onTokenClick: (token: RawToken, sentenceText: string) => void;
   fontSize?: number;
   lineHeight?: number;
@@ -27,6 +29,7 @@ export function ReaderText({
   languageCode,
   getStatus,
   selectedLemma,
+  highlightForm,
   onTokenClick,
   fontSize = 20,
   lineHeight = 2.15,
@@ -53,6 +56,7 @@ export function ReaderText({
             const status = getStatus(token.lemma);
             const paint = paintFor(status);
             const isSelected = selectedLemma !== null && token.lemma === selectedLemma;
+            const isKaraoke = !!highlightForm && token.form.toLocaleLowerCase() === highlightForm.toLocaleLowerCase();
             const prev = idx > 0 ? tokens[idx - 1] : undefined;
             const space = needsLeadingSpace(token, prev, languageCode);
 
@@ -64,7 +68,7 @@ export function ReaderText({
                   onClick={() => onTokenClick(token, sentence.text)}
                   className={`inline rounded-[3px] px-0.5 py-px transition-[background-color] hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50${
                     isSelected ? ' ring-2 ring-[#0b1c2d]/60' : ''
-                  }`}
+                  }${isKaraoke ? ' ring-2 ring-amber-400 brightness-90' : ''}`}
                   style={
                     paint.background
                       ? { backgroundColor: paint.background, color: paint.text }
