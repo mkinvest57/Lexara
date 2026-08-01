@@ -138,7 +138,7 @@ export default function ReviewPage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  });
+  }, [phase, current, effective, mcq, advance, preferences.speechRate]);
 
   const progress = queue.length
     ? Math.round(((index + (finished ? 1 : 0)) / queue.length) * 100)

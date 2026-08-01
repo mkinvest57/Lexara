@@ -67,7 +67,7 @@ export function TranslationPanel({
         const result = await requestTranslation(word, 'fr', sourceLanguage, controller.signal);
         if (!active) return;
         if (result.translatedText) setMeaning(result.translatedText);
-        setSuggestions(result.alternatives);
+        setSuggestions(result.alternatives ?? []);
       } catch (error) {
         if (active && (error as { name?: string })?.name !== 'AbortError')
           setMessage('Traduction automatique indisponible : ajoutez votre propre sens.');

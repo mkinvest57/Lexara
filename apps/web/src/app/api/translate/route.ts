@@ -56,7 +56,7 @@ export async function GET(request: Request) {
       const result = await translateText(text, target, source);
       translation = typeof result === 'string' ? result : (result as { translation?: string }).translation ?? text;
     }
-    return NextResponse.json({ translation }, {
+    return NextResponse.json({ translatedText: translation, alternatives: [] } satisfies import('@yapro/core').TranslationResult, {
       headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=604800' },
     });
   } catch (error) {
