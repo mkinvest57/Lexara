@@ -21,6 +21,5 @@ config.resolver.nodeModulesPaths = [
 
 // pnpm links workspace packages; Metro needs to walk into them.
 config.resolver.unstable_enableSymlinks = true;
-config.resolver.disableHierarchicalLookup = true;
 
 module.exports = config;

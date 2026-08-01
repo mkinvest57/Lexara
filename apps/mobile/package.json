@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "0.1.0",
   "dependencies": {
+    "@expo/log-box": "~57.0.2",
     "@expo/metro-runtime": "^57.0.8",
     "@expo/ui": "~57.0.8",
     "@expo/vector-icons": "^15.0.2",
