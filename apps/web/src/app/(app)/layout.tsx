@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { AppSidebar } from '@/components/layout/AppSidebar';
+import { LynxChat } from '@/components/lynx-chat';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -28,6 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       {!isReader && !isReviewSession && <AppSidebar mobile />}
+      {!isReader && !isReviewSession && <LynxChat />}
     </div>
   );
 }
