@@ -1,19 +1,13 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export type StorageAdapter = {
   getItem(key: string): Promise<string | null>;
   setItem(key: string, value: string): Promise<void>;
   removeItem(key: string): Promise<void>;
 };
 
-const memory = new Map<string, string>();
-
 export const productStorage: StorageAdapter = {
-  async getItem(key) {
-    return memory.get(key) ?? null;
-  },
-  async setItem(key, value) {
-    memory.set(key, value);
-  },
-  async removeItem(key) {
-    memory.delete(key);
-  },
+  getItem: (key) => AsyncStorage.getItem(key),
+  setItem: (key, value) => AsyncStorage.setItem(key, value),
+  removeItem: (key) => AsyncStorage.removeItem(key),
 };
