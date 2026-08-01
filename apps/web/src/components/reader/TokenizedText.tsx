@@ -28,14 +28,14 @@ export function TokenizedText({ sentences, onWordClick, savedVocabTerms }: Token
 
   return (
     <div className="space-y-4 text-lg leading-relaxed">
-      {sentences.map((sentence) => (
-        <p key={sentence.id} className="inline">
+      {sentences.map((sentence, sentenceIdx) => (
+        <p key={sentenceIdx} className="inline">
           {sentence.tokens.map((token: any, idx: number) => {
             const isPunctuation = /^[.,!?;:()"]$/.test(token.form);
             const needsSpace = idx > 0 && !isPunctuation;
 
             return (
-              <span key={token.id}>
+              <span key={idx}>
                 {needsSpace && ' '}
                 <span
                   className={cn(

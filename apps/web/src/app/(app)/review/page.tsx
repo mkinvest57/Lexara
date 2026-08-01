@@ -57,6 +57,9 @@ export default function ReviewPage() {
   const [clozeInput, setClozeInput] = useState('');
   const [mcqChoice, setMcqChoice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => clearTimeout(advanceTimerRef.current), []);
 
   const current = queue[index];
   const activity = activityForIndex(
@@ -99,7 +102,7 @@ export default function ReviewPage() {
       reviewWord(current.id, correct ? 'good' : 'again');
       if (correct) setScore((s) => s + 1);
       setPhase(correct ? 'correct' : 'wrong');
-      setTimeout(() => {
+      advanceTimerRef.current = setTimeout(() => {
         if (index + 1 >= queue.length) {
           setFinished(true);
         } else {

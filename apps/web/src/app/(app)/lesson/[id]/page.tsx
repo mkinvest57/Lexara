@@ -321,9 +321,10 @@ export default function LessonPage() {
                       onTranslate={async (text, idx) => {
                         const key = `${currentPage}-${idx}`;
                         if (sentenceTrs[key]) { setSentenceTrs((t) => { const n = { ...t }; delete n[key]; return n; }); return; }
-                        const res = await fetch('/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, target: 'fr' }) });
-                        const json = (await res.json()) as { translation?: string };
-                        if (json.translation) setSentenceTrs((t) => ({ ...t, [key]: json.translation! }));
+                        const res = await fetch('/api/translate?' + new URLSearchParams({ text, source: lesson.languageCode, target: 'fr' }));
+                        if (!res.ok) return;
+                        const json = (await res.json()) as { translatedText?: string };
+                        if (json.translatedText) setSentenceTrs((t) => ({ ...t, [key]: json.translatedText! }));
                       }}
                       onPrev={() => setSentenceIdx((i) => Math.max(0, i - 1))}
                       onNext={() => {

@@ -166,12 +166,21 @@ export const useProductStore = create<ProductState>()((set, get) => ({
   loadLanguage: async (languageCode) => {
     set({ syncStatus: 'syncing' });
 
-    const [published, owned, vocabulary, statuses] = await Promise.all([
-      fetchPublishedLessons(languageCode),
-      fetchOwnedLessons(),
-      fetchVocabulary(languageCode),
-      fetchWordStatuses(languageCode),
-    ]);
+    let published: Awaited<ReturnType<typeof fetchPublishedLessons>>;
+    let owned: Awaited<ReturnType<typeof fetchOwnedLessons>>;
+    let vocabulary: Awaited<ReturnType<typeof fetchVocabulary>>;
+    let statuses: Awaited<ReturnType<typeof fetchWordStatuses>>;
+    try {
+      [published, owned, vocabulary, statuses] = await Promise.all([
+        fetchPublishedLessons(languageCode),
+        fetchOwnedLessons(),
+        fetchVocabulary(languageCode),
+        fetchWordStatuses(languageCode),
+      ]);
+    } catch {
+      set({ syncStatus: 'offline' });
+      return;
+    }
 
     const online = published.online || vocabulary.online;
 
@@ -473,6 +482,7 @@ export const useProductStore = create<ProductState>()((set, get) => ({
     set((state) => {
       const next = [...state.playlist];
       const [moved] = next.splice(from, 1);
+      if (moved === undefined) return state;
       next.splice(to, 0, moved);
       return { playlist: next };
     }),

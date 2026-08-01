@@ -30,14 +30,15 @@ export function ReviewModal({ cards, onComplete, onClose }: ReviewModalProps) {
   const completionSent = useRef(false);
 
   const reviewCards = useMemo(() => cards.slice(0, 3), [cards]);
-  const matchCards = useMemo<MatchCard[]>(() => {
-    const terms = reviewCards.map((card) => ({
+  const [matchCards] = useState<MatchCard[]>(() => {
+    const c = cards.slice(0, 3);
+    const terms = c.map((card) => ({
       key: `term-${card.id}`,
       pairId: card.id,
       text: card.term,
       type: 'term' as const,
     }));
-    const translations = reviewCards
+    const translations = c
       .map((card) => ({
         key: `translation-${card.id}`,
         pairId: card.id,
@@ -45,9 +46,8 @@ export function ReviewModal({ cards, onComplete, onClose }: ReviewModalProps) {
         type: 'translation' as const,
       }))
       .sort(() => Math.random() - 0.5);
-
     return [...terms, ...translations];
-  }, [reviewCards]);
+  });
 
   useEffect(() => {
     if (
