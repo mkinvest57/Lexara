@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   ArrowRight,
+  BookOpen,
   Camera,
   Check,
   ClipboardPaste,
@@ -15,7 +16,52 @@ import {
 } from 'lucide-react';
 import { useProductStore } from '@/lib/product-store';
 
-type SourceType = 'text' | 'web' | 'file' | 'youtube' | 'camera';
+type SourceType = 'text' | 'web' | 'file' | 'youtube' | 'camera' | 'epub' | 'pdf';
+
+async function parseEpub(file: File): Promise<{ title: string; text: string }> {
+  const { unzipSync, strFromU8 } = await import('fflate');
+  const uint8 = new Uint8Array(await file.arrayBuffer());
+  const unzipped = unzipSync(uint8);
+
+  const containerXml = strFromU8(unzipped['META-INF/container.xml']);
+  const opfPath = containerXml.match(/full-path="([^"]+\.opf)"/)?.[1];
+  if (!opfPath) throw new Error('EPUB invalide : fichier OPF introuvable');
+
+  const opfDir = opfPath.includes('/') ? opfPath.slice(0, opfPath.lastIndexOf('/') + 1) : '';
+  const opfXml = strFromU8(unzipped[opfPath]);
+
+  const title =
+    opfXml.match(/<dc:title[^>]*>([^<]+)<\/dc:title>/)?.[1]?.trim() ??
+    file.name.replace(/\.epub$/i, '');
+
+  const manifest: Record<string, string> = {};
+  for (const m of opfXml.matchAll(
+    /<item[^>]+id="([^"]+)"[^>]+href="([^"]+)"[^>]+media-type="application\/xhtml[^"]*"/g
+  )) {
+    manifest[m[1]] = m[2];
+  }
+  // also try reversed attribute order
+  for (const m of opfXml.matchAll(
+    /<item[^>]+href="([^"]+)"[^>]+id="([^"]+)"[^>]+media-type="application\/xhtml[^"]*"/g
+  )) {
+    manifest[m[2]] = m[1];
+  }
+
+  const spineItems = [...opfXml.matchAll(/<itemref[^>]+idref="([^"]+)"/g)].map((m) => m[1]);
+
+  const chunks: string[] = [];
+  for (const id of spineItems.slice(0, 60)) {
+    const href = manifest[id];
+    if (!href) continue;
+    const bytes = unzipped[opfDir + href] ?? unzipped[href];
+    if (!bytes) continue;
+    const html = strFromU8(bytes);
+    const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (text.length > 80) chunks.push(text);
+  }
+  if (!chunks.length) throw new Error('Aucun texte extrait du fichier EPUB');
+  return { title, text: chunks.join('\n\n') };
+}
 
 const sourceOptions: {
   id: SourceType;
@@ -46,6 +92,18 @@ const sourceOptions: {
     title: 'Vidéo YouTube',
     copy: 'Importez les sous-titres et la vidéo interactive.',
     icon: Globe2,
+  },
+  {
+    id: 'epub',
+    title: 'eBook EPUB',
+    copy: 'Importez un livre numérique .epub par chapitres.',
+    icon: BookOpen,
+  },
+  {
+    id: 'pdf',
+    title: 'Document PDF',
+    copy: 'Extrayez le texte depuis un fichier .pdf (20 Mo max).',
+    icon: FileText,
   },
   {
     id: 'camera',
@@ -95,11 +153,50 @@ export default function ImportPage() {
     if (!title) setTitle(file.name.replace(/\.(txt|md)$/i, ''));
   };
 
+  const handleEpubFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    setError('');
+    try {
+      const { title: epubTitle, text } = await parseEpub(file);
+      setContent(text);
+      setTitle(epubTitle);
+    } catch (err) {
+      setError((err as Error).message || 'Impossible de lire ce fichier EPUB.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handlePdfFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) {
+      setError('Fichier trop grand (20 Mo max).');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch('/api/extract-pdf', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'extract_failed');
+      setContent(data.text ?? '');
+      if (!title && data.title) setTitle(data.title);
+    } catch {
+      setError('Impossible d\'extraire le PDF. Vérifiez que le fichier contient du texte sélectionnable.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleOcrFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     setError('');
-    // Mock OCR extraction
     setContent('Texte extrait par scanner photo : Une après-midi ensoleillée dans la ville. Les gens se promènent et échangent avec le sourire.');
     setTitle('Scan Photo OCR');
     setStep(2);
@@ -333,6 +430,38 @@ export default function ImportPage() {
                         Importer
                       </button>
                     </div>
+                  </label>
+                )}
+                {source === 'epub' && (
+                  <label className="flex min-h-24 cursor-pointer items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 px-4 text-sm font-bold text-slate-600 hover:border-blue-400 hover:bg-blue-50/40">
+                    {busy ? (
+                      <><Loader2 className="h-5 w-5 animate-spin" /> Extraction en cours…</>
+                    ) : (
+                      <><BookOpen className="h-5 w-5" /> Choisir un fichier .epub</>
+                    )}
+                    <input
+                      type="file"
+                      accept=".epub,application/epub+zip"
+                      onChange={handleEpubFile}
+                      className="sr-only"
+                      disabled={busy}
+                    />
+                  </label>
+                )}
+                {source === 'pdf' && (
+                  <label className="flex min-h-24 cursor-pointer items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 px-4 text-sm font-bold text-slate-600 hover:border-blue-400 hover:bg-blue-50/40">
+                    {busy ? (
+                      <><Loader2 className="h-5 w-5 animate-spin" /> Extraction en cours…</>
+                    ) : (
+                      <><Upload className="h-5 w-5" /> Choisir un fichier .pdf (20 Mo max)</>
+                    )}
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={handlePdfFile}
+                      className="sr-only"
+                      disabled={busy}
+                    />
                   </label>
                 )}
                 <label className="grid gap-2 text-sm font-bold">
