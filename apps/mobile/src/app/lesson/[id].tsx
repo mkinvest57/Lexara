@@ -253,21 +253,6 @@ export default function LessonScreen() {
     setSelected(null);
   };
 
-  const swipeGesture = Gesture.Pan()
-    .runOnJS(true)
-    .activeOffsetX([-20, 20])
-    .failOffsetY([-15, 15])
-    .onEnd((e) => {
-      if (Math.abs(e.translationX) < 40) return;
-      const next =
-        e.translationX < 0
-          ? Math.min(sentenceIdx + 1, sentences.length - 1)
-          : Math.max(sentenceIdx - 1, 0);
-      if (next === sentenceIdx) return;
-      setSentenceIdx(next);
-      void openPhraseTranslation(sentences[next]);
-    });
-
   const completeLesson = () => {
     flushListening();
     product.updateLessonProgress(lesson.id, {
@@ -302,6 +287,21 @@ export default function LessonScreen() {
     await stopLessonAudio();
     await speakEnglish(text, { rate });
   };
+
+  const swipeGesture = Gesture.Pan()
+    .runOnJS(true)
+    .activeOffsetX([-20, 20])
+    .failOffsetY([-15, 15])
+    .onEnd((e) => {
+      if (Math.abs(e.translationX) < 40) return;
+      const next =
+        e.translationX < 0
+          ? Math.min(sentenceIdx + 1, sentences.length - 1)
+          : Math.max(sentenceIdx - 1, 0);
+      if (next === sentenceIdx) return;
+      setSentenceIdx(next);
+      void openPhraseTranslation(sentences[next]);
+    });
 
   const savedInLesson = product.vocabulary.filter((item) => item.lessonId === lesson.id);
   const progress = product.progress[lesson.id]?.progress ?? Math.min(0.08, seen.size / tokens.length);
