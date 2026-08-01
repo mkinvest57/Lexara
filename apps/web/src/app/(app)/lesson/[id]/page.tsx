@@ -58,6 +58,8 @@ export default function LessonPage() {
   const togglePlaylist = useProductStore((s) => s.togglePlaylist);
   const recordReading = useProductStore((s) => s.recordReading);
 
+  const updatePreferences = useProductStore((s) => s.updatePreferences);
+
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedToken, setSelectedToken] = useState<RawToken | null>(null);
   const [selectedSentence, setSelectedSentence] = useState('');
@@ -71,6 +73,7 @@ export default function LessonPage() {
   const [sentenceIdx, setSentenceIdx] = useState(0);
   const [karaokeForm, setKaraokeForm] = useState<string | null>(null);
   const [sentenceTrs, setSentenceTrs] = useState<Record<string, string>>({});
+  const [ttsChar, setTtsChar] = useState(0);
   const textRef = useRef<HTMLDivElement>(null);
 
   const pages = useMemo(() => {
@@ -172,17 +175,18 @@ export default function LessonPage() {
   };
 
   const speak = () => {
-    if (isPlaying) { stopWebSpeech(); setIsPlaying(false); setKaraokeForm(null); return; }
+    if (isPlaying) { stopWebSpeech(); setIsPlaying(false); setKaraokeForm(null); setTtsChar(0); return; }
     const text = readingMode === 'sentence'
       ? (currentPageData.sentences[sentenceIdx]?.text ?? '')
       : lesson.content;
     void speakEnglishWeb(text, {
       rate: preferences.speechRate,
       onStart: () => setIsPlaying(true),
-      onEnd: () => { setIsPlaying(false); setKaraokeForm(null); },
-      onError: () => { setIsPlaying(false); setKaraokeForm(null); },
+      onEnd: () => { setIsPlaying(false); setKaraokeForm(null); setTtsChar(0); },
+      onError: () => { setIsPlaying(false); setKaraokeForm(null); setTtsChar(0); },
       onBoundary: (e) => {
         if (e.name === 'word') {
+          setTtsChar(e.charIndex);
           const word = text.slice(e.charIndex, e.charIndex + e.charLength).replace(/\W/g, '');
           setKaraokeForm(word || null);
         }
@@ -392,17 +396,38 @@ export default function LessonPage() {
       </div>
 
       {/* Footer */}
-      <footer className="flex h-[64px] shrink-0 items-center justify-between border-t border-slate-200 bg-white px-5 sm:px-8">
-        <button type="button" onClick={speak} className="grid h-11 w-11 place-items-center rounded-full bg-[#0b1c2d] text-white hover:bg-slate-800" aria-label={isPlaying ? 'Arrêter la lecture' : 'Écouter la leçon'}>
-          {isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="ml-0.5 h-5 w-5 fill-current" />}
-        </button>
-        <button type="button" onClick={() => setShowTranslation((v) => !v)} className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold hover:bg-slate-100">
-          <BookOpenText className="h-4 w-4" />
-          {showTranslation ? 'Masquer la traduction' : 'Traduction'}
-        </button>
-        <div className="hidden items-center gap-2 text-sm font-semibold text-slate-600 sm:flex">
-          <Volume2 className="h-4 w-4" />
-          {words.filter((w) => w.lessonId === lesson.id).length} sauvegardés
+      <footer className="shrink-0 border-t border-slate-200 bg-white">
+        {isPlaying && lesson.content.length > 0 && (
+          <div className="h-0.5 bg-slate-100">
+            <div className="h-full bg-emerald-400 transition-[width] duration-300" style={{ width: `${Math.min(100, Math.round((ttsChar / lesson.content.length) * 100))}%` }} />
+          </div>
+        )}
+        <div className="flex h-[64px] items-center justify-between px-5 sm:px-8">
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={speak} className="grid h-11 w-11 place-items-center rounded-full bg-[#0b1c2d] text-white hover:bg-slate-800" aria-label={isPlaying ? 'Arrêter la lecture' : 'Écouter la leçon'}>
+              {isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="ml-0.5 h-5 w-5 fill-current" />}
+            </button>
+            <div className="hidden items-center gap-1 sm:flex">
+              {[0.75, 1, 1.25, 1.5].map((rate) => (
+                <button
+                  key={rate}
+                  type="button"
+                  onClick={() => updatePreferences({ speechRate: rate })}
+                  className={`h-7 min-w-[40px] rounded-full px-2 text-xs font-bold transition-colors ${Math.abs(preferences.speechRate - rate) < 0.01 ? 'bg-[#0b1c2d] text-white' : 'border border-slate-300 text-slate-600 hover:bg-slate-100'}`}
+                >
+                  {rate}x
+                </button>
+              ))}
+            </div>
+          </div>
+          <button type="button" onClick={() => setShowTranslation((v) => !v)} className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold hover:bg-slate-100">
+            <BookOpenText className="h-4 w-4" />
+            {showTranslation ? 'Masquer la traduction' : 'Traduction'}
+          </button>
+          <div className="hidden items-center gap-2 text-sm font-semibold text-slate-600 sm:flex">
+            <Volume2 className="h-4 w-4" />
+            {words.filter((w) => w.lessonId === lesson.id).length} sauvegardés
+          </div>
         </div>
       </footer>
     </div>
