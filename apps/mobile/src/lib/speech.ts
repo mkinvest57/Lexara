@@ -30,13 +30,33 @@ const langCodeMap: Record<string, string> = {
   eo: 'eo',
 };
 
+const preferredVoiceNames = ['ava', 'aria', 'jenny', 'samantha', 'serena', 'daniel', 'guy', 'karen', 'moira'];
+const noveltyVoiceNames = ['bad news', 'bells', 'bubbles', 'cellos', 'whisper', 'zarvox'];
+
+function scoreVoice(voice: Voice, targetLang: string): number {
+  const lang = voice.language.toLowerCase();
+  const name = (voice.name ?? '').toLowerCase();
+  const prefix = targetLang.split('-')[0].toLowerCase();
+  let score = 0;
+  if (lang === `${prefix}-us` || lang === `${prefix}_us`) score += 500;
+  else if (lang.startsWith(prefix)) score += 300;
+  if (voice.quality === 'Enhanced') score += 200;
+  if (/natural|neural|premium|enhanced/.test(name)) score += 180;
+  const preferredIndex = preferredVoiceNames.findIndex((n) => name.includes(n));
+  if (preferredIndex >= 0) score += 100 - preferredIndex * 4;
+  if (noveltyVoiceNames.some((n) => name.includes(n))) score -= 500;
+  return score;
+}
+
 let speechRequest = 0;
 
 export async function getVoiceForLanguage(langCode: string = 'en'): Promise<Voice | undefined> {
   try {
     const voices = await Speech.getAvailableVoicesAsync();
     const prefix = langCode.split('-')[0].toLowerCase();
-    return voices.find((v) => v.language.toLowerCase().startsWith(prefix));
+    const matching = voices.filter((v) => v.language.toLowerCase().startsWith(prefix));
+    if (!matching.length) return undefined;
+    return matching.sort((a, b) => scoreVoice(b, langCode) - scoreVoice(a, langCode))[0];
   } catch {
     return undefined;
   }
