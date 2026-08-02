@@ -58,6 +58,7 @@ export default function LessonScreen() {
   const [fontTools, setFontTools] = useState(false);
   const [fontSize, setFontSize] = useState(() => Math.round(18 * (product.preferences.readerFontScale ?? 1)));
   const [sentenceTrs, setSentenceTrs] = useState<Record<string, string>>({});
+  const [vocabOpen, setVocabOpen] = useState(false);
   const progressRef = useRef(product.progress);
   const updateProgressRef = useRef(product.updateLessonProgress);
   const listeningStartedAtRef = useRef<number | null>(null);
@@ -343,6 +344,13 @@ export default function LessonScreen() {
         </View>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Vocabulaire de la leçon"
+          onPress={() => setVocabOpen(true)}
+          style={[styles.topButton, savedInLesson.length > 0 && styles.topButtonActive]}>
+          <SymbolView name="bookmark.fill" tintColor={savedInLesson.length > 0 ? '#FFFFFF' : productTheme.ink} size={18} />
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Taille du texte"
           onPress={() => setFontTools((v) => !v)}
           style={[styles.topButton, fontTools && styles.topButtonActive]}>
@@ -611,6 +619,24 @@ export default function LessonScreen() {
           setMenuOpen(false);
         }}
       />
+
+      <Modal
+        visible={vocabOpen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setVocabOpen(false)}>
+        <VocabPanel
+          lessonId={lesson.id}
+          pageLemmas={new Set(tokens.map((t) => t.normalized).filter(Boolean))}
+          vocabulary={product.vocabulary}
+          onClose={() => setVocabOpen(false)}
+          onWordPress={(norm) => {
+            setVocabOpen(false);
+            const token = tokens.find((t) => t.normalized === norm);
+            if (token) void openWord(token);
+          }}
+        />
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1667,4 +1693,147 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
+});
+
+const STATUS_COLORS: Record<number, { bg: string; text: string } | null> = {
+  1: { bg: '#ffe08a', text: '#4a3200' },
+  2: { bg: '#ffe9a8', text: '#4a3200' },
+  3: { bg: '#fff2c8', text: '#4a3200' },
+  4: null,
+};
+
+const STATUS_LABELS: Record<number, string> = {
+  1: 'Niv. 1',
+  2: 'Niv. 2',
+  3: 'Niv. 3',
+  4: 'Connu',
+};
+
+function VocabPanel({
+  lessonId,
+  pageLemmas,
+  vocabulary,
+  onClose,
+  onWordPress,
+}: {
+  lessonId: string;
+  pageLemmas: Set<string>;
+  vocabulary: ReturnType<typeof useProduct>['vocabulary'];
+  onClose: () => void;
+  onWordPress: (norm: string) => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const onPage = vocabulary.filter(
+    (w) => pageLemmas.has(w.normalizedTerm) && w.lessonId === lessonId,
+  );
+  const elsewhere = vocabulary.filter(
+    (w) => !pageLemmas.has(w.normalizedTerm) && w.lessonId === lessonId,
+  );
+
+  const renderEntry = (item: (typeof vocabulary)[number]) => {
+    const paint = STATUS_COLORS[item.status] ?? null;
+    return (
+      <Pressable
+        key={item.id}
+        accessibilityRole="button"
+        onPress={() => onWordPress(item.normalizedTerm)}
+        style={({ pressed }) => [vStyles.row, pressed && { opacity: 0.6 }]}>
+        <View style={[vStyles.badge, paint ? { backgroundColor: paint.bg } : vStyles.badgeKnown]}>
+          <Text style={[vStyles.badgeTerm, paint ? { color: paint.text } : vStyles.badgeTermKnown]}>
+            {item.term}
+          </Text>
+        </View>
+        <Text style={vStyles.translation} numberOfLines={1}>{item.translation}</Text>
+        <Text style={vStyles.statusLabel}>{STATUS_LABELS[item.status] ?? ''}</Text>
+      </Pressable>
+    );
+  };
+
+  return (
+    <SafeAreaView style={vStyles.sheet} edges={['top']}>
+      <View style={vStyles.header}>
+        <Text style={vStyles.title}>
+          Vocabulaire ({onPage.length + elsewhere.length})
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Fermer le vocabulaire"
+          onPress={onClose}
+          style={vStyles.closeButton}>
+          <SymbolView name="xmark" tintColor={productTheme.ink} size={17} />
+        </Pressable>
+      </View>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
+        {onPage.length > 0 && (
+          <>
+            <Text style={vStyles.groupLabel}>Page actuelle · {onPage.length}</Text>
+            {onPage.map(renderEntry)}
+          </>
+        )}
+        {elsewhere.length > 0 && (
+          <>
+            <Text style={vStyles.groupLabel}>Leçon · {elsewhere.length}</Text>
+            {elsewhere.map(renderEntry)}
+          </>
+        )}
+        {onPage.length + elsewhere.length === 0 && (
+          <View style={vStyles.empty}>
+            <SymbolView name="bookmark" tintColor={productTheme.muted} size={32} />
+            <Text style={vStyles.emptyText}>Aucun mot sauvegardé dans cette leçon.</Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const vStyles = StyleSheet.create({
+  sheet: { flex: 1, backgroundColor: productTheme.surface },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: productTheme.line,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  title: { fontSize: 16, fontWeight: '800', color: productTheme.ink },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: productTheme.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  groupLabel: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 6,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: productTheme.muted,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  badgeKnown: { backgroundColor: productTheme.background },
+  badgeTerm: { fontSize: 14, fontWeight: '600' },
+  badgeTermKnown: { color: productTheme.inkSoft },
+  translation: { flex: 1, fontSize: 14, color: productTheme.inkSoft },
+  statusLabel: { fontSize: 12, color: productTheme.muted },
+  empty: { alignItems: 'center', gap: 12, paddingVertical: 64 },
+  emptyText: { fontSize: 14, color: productTheme.muted, textAlign: 'center' },
 });
