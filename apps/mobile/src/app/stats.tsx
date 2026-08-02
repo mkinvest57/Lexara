@@ -7,6 +7,15 @@ import { productTheme } from '@/constants/product-theme';
 
 const weekLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
+const BADGES = [
+  { id: 'words_100', label: '100 mots lus', icon: 'book.fill', threshold: 100, field: 'totalWordsRead' as const },
+  { id: 'words_1k', label: '1 000 mots lus', icon: 'book.fill', threshold: 1000, field: 'totalWordsRead' as const },
+  { id: 'words_10k', label: '10 000 mots lus', icon: 'books.vertical.fill', threshold: 10000, field: 'totalWordsRead' as const },
+  { id: 'streak_7', label: 'Série de 7 jours', icon: 'flame.fill', threshold: 7, field: 'currentStreak' as const },
+  { id: 'streak_30', label: 'Série de 30 jours', icon: 'flame.fill', threshold: 30, field: 'currentStreak' as const },
+  { id: 'coins_500', label: '500 pièces', icon: 'lightbulb.fill', threshold: 500, field: 'coins' as const },
+];
+
 export default function StatsScreen() {
   const product = useProduct();
   const readGoal = product.profile.dailyWordGoal;
@@ -117,6 +126,23 @@ export default function StatsScreen() {
           <Stat value={product.vocabulary.filter((item) => item.status < 4).length} label="Mots à apprendre" />
           <Stat value={product.totalWordsRead} label="Nombre de mots lus" />
           <Stat value={minutes} label="Minutes d’étude" />
+        </View>
+
+        <Text style={styles.sectionTitle}>Jalons</Text>
+        <View style={styles.badgesGrid}>
+          {BADGES.map((badge) => {
+            const earned = product[badge.field] >= badge.threshold;
+            return (
+              <View key={badge.id} style={[styles.badgeItem, !earned && styles.badgeItemLocked]}>
+                <View style={[styles.badgeIcon, !earned && styles.badgeIconLocked]}>
+                  <SymbolView name={badge.icon} tintColor={earned ? '#FFFFFF' : productTheme.muted} size={20} />
+                </View>
+                <Text style={[styles.badgeLabel, !earned && styles.badgeLabelLocked]} numberOfLines={2}>
+                  {badge.label}
+                </Text>
+              </View>
+            );
+          })}
         </View>
 
         <Text style={styles.sectionTitle}>Votre niveau</Text>
@@ -366,6 +392,42 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: '900',
     color: productTheme.ink,
+  },
+  badgesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  badgeItem: {
+    width: '30.8%',
+    padding: 12,
+    borderRadius: 13,
+    backgroundColor: productTheme.green,
+    alignItems: 'center',
+    gap: 8,
+  },
+  badgeItemLocked: {
+    backgroundColor: productTheme.surface,
+  },
+  badgeIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeIconLocked: {
+    backgroundColor: productTheme.lineSoft,
+  },
+  badgeLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  badgeLabelLocked: {
+    color: productTheme.muted,
   },
   levelCard: {
     padding: 17,
