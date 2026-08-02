@@ -58,6 +58,7 @@ export default function LessonScreen() {
   const [fontTools, setFontTools] = useState(false);
   const [fontSize, setFontSize] = useState(() => Math.round(18 * (product.preferences.readerFontScale ?? 1)));
   const [sentenceTrs, setSentenceTrs] = useState<Record<string, string>>({});
+  const [showTranslation, setShowTranslation] = useState(false);
   const [vocabOpen, setVocabOpen] = useState(false);
   const [karaokeCharIdx, setKaraokeCharIdx] = useState(-1);
   const progressRef = useRef(product.progress);
@@ -534,6 +535,13 @@ export default function LessonScreen() {
             style={({ pressed }) => [styles.finishButton, pressed && styles.pressed]}>
             <Text style={styles.finishText}>Terminer la leçon</Text>
           </Pressable>
+
+          {showTranslation && lesson.translation ? (
+            <View style={styles.lessonTranslationCard}>
+              <Text style={styles.lessonTranslationLabel}>Traduction</Text>
+              <Text style={styles.lessonTranslationText}>{lesson.translation}</Text>
+            </View>
+          ) : null}
         </ScrollView>
         </GestureDetector>
       )}
@@ -593,6 +601,16 @@ export default function LessonScreen() {
           <SymbolView name="rectangle.stack.fill" tintColor={productTheme.inkSoft} size={19} />
           <Text style={styles.reviewCount}>{savedInLesson.length}</Text>
         </Pressable>
+        {lesson.translation ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={showTranslation ? 'Masquer la traduction' : 'Traduction de la leçon'}
+            onPress={() => setShowTranslation((v) => !v)}
+            style={[styles.phraseButton, showTranslation && styles.phraseButtonActive]}>
+            <SymbolView name="globe" tintColor={productTheme.inkSoft} size={18} />
+            <Text style={styles.phraseText}>Traduction</Text>
+          </Pressable>
+        ) : null}
         </View>
       </View>
 
@@ -1493,6 +1511,25 @@ const styles = StyleSheet.create({
     lineHeight: 25,
     fontWeight: '700',
     color: productTheme.ink,
+  },
+  lessonTranslationCard: {
+    marginTop: 16,
+    padding: 15,
+    borderRadius: 13,
+    backgroundColor: productTheme.surface,
+  },
+  lessonTranslationLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: productTheme.muted,
+    marginBottom: 8,
+  },
+  lessonTranslationText: {
+    fontSize: 15,
+    lineHeight: 23,
+    color: productTheme.inkSoft,
   },
   phraseTranslationCard: {
     minHeight: 72,
