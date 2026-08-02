@@ -1,7 +1,7 @@
 export type LessonLevel = 'Débutant 1' | 'Débutant 2' | 'Intermédiaire' | 'Avancé';
 export type LessonKind = 'Mini-histoire' | 'Cours' | 'Actualité' | 'Podcast';
 
-export type BaseLanguage = 'fr' | 'en' | 'es' | 'it' | 'de' | 'ar';
+export type BaseLanguage = 'fr' | 'en' | 'es' | 'it' | 'ja';
 
 export type Lesson = {
   id: string;
@@ -91,8 +91,7 @@ export const BASE_LANGUAGES: { code: BaseLanguage; name: string; flag: string }[
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
   { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
 ];
 
 type NativeTemplate = {

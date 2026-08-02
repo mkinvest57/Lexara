@@ -18,13 +18,10 @@ type Choice = {
 
 const languageChoices: Choice[] = [
   { id: 'en', label: 'anglais', symbol: 'globe.europe.africa.fill' },
-  { id: 'zh', label: 'chinois (Simplifié)', symbol: 'globe.asia.australia.fill' },
-  { id: 'de', label: 'allemand', symbol: 'globe.europe.africa.fill' },
   { id: 'es', label: 'espagnol', symbol: 'globe.americas.fill' },
   { id: 'fr', label: 'français', symbol: 'globe.europe.africa.fill' },
-  { id: 'it', label: 'italien', symbol: 'globe.europe.africa.fill' },
   { id: 'ja', label: 'japonais', symbol: 'globe.asia.australia.fill' },
-  { id: 'ko', label: 'coréen', symbol: 'globe.asia.australia.fill' },
+  { id: 'it', label: 'italien', symbol: 'globe.europe.africa.fill' },
 ];
 
 const reasonChoices: Choice[] = [
