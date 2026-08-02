@@ -24,7 +24,7 @@ import { getPhoneticAnnotation } from '@/lib/phonetics';
 import { paginate, splitSentences } from '@yapro/core';
 import { productTheme } from '@/constants/product-theme';
 
-const punctuationOnly = /^[^a-zA-Z]+$/;
+const punctuationOnly = /^[^A-Za-zÀ-ÖØ-öø-ÿĀ-ɏ]+$/;
 
 type ReaderToken = {
   id: string;
@@ -573,12 +573,15 @@ export default function LessonScreen() {
           accessibilityRole="button"
           accessibilityLabel={playing || audioLoading ? 'Arrêter la lecture' : 'Écouter la leçon'}
           onPress={() => void toggleAudio()}
-          style={[styles.playButton, playing && styles.playButtonActive]}>
+          style={[styles.playButton, (playing || audioLoading) && styles.playButtonActive]}>
           {audioLoading ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <SymbolView name={playing ? 'stop.fill' : 'play.fill'} tintColor="#FFFFFF" size={16} />
+            <SymbolView name={playing ? 'stop.fill' : 'play.fill'} tintColor="#FFFFFF" size={15} />
           )}
+          <Text style={styles.playButtonLabel}>
+            {audioLoading ? 'Chargement…' : playing ? 'Stop' : 'Écouter'}
+          </Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -993,7 +996,7 @@ function SentenceModeCard({
         <Text style={[styles.readerText, { fontSize, lineHeight: Math.round(fontSize * 1.94), textAlign: 'center' }]}>
           {tokens.map((token) => {
             const saved = savedTerms.get(token.normalized);
-            const isClickable = Boolean(token.normalized) && !/^[^a-zA-Z]+$/.test(token.raw);
+            const isClickable = Boolean(token.normalized) && !punctuationOnly.test(token.raw);
             return (
               <Text key={token.id}>
                 {token.leadingSpace ? ' ' : ''}
@@ -1051,7 +1054,7 @@ function tokenizeLesson(content: string): ReaderToken[] {
   const sentences = content.match(/[^.!?]+[.!?]*/g) ?? [content];
   const result: ReaderToken[] = [];
   sentences.forEach((sentence, sentenceIndex) => {
-    const words = sentence.trim().match(/[A-Za-z]+(?:['’][A-Za-z]+)?|[0-9]+|[^\sA-Za-z0-9]/g) ?? [];
+    const words = sentence.trim().match(/[A-Za-zÀ-ÖØ-öø-ÿĀ-ɏ]+(?:[‘’][A-Za-zÀ-ÖØ-öø-ÿĀ-ɏ]+)?|[0-9]+|[^\sA-Za-zÀ-ÖØ-öø-ÿĀ-ɏ0-9]/g) ?? [];
     words.forEach((raw, wordIndex) => {
       result.push({
         id: `${sentenceIndex}-${wordIndex}`,
@@ -1167,7 +1170,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   wordNew: {
-    backgroundColor: '#CDE8F6',
+    backgroundColor: 'rgba(74, 158, 210, 0.14)',
+    borderRadius: 3,
   },
   wordSaved: {
     backgroundColor: '#BFE2C8',
@@ -1266,15 +1270,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   playButton: {
-    width: 42,
     height: 42,
+    paddingHorizontal: 14,
     borderRadius: 21,
     backgroundColor: productTheme.ink,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 7,
   },
   playButtonActive: {
     backgroundColor: productTheme.green,
+  },
+  playButtonLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   phraseButton: {
     minHeight: 44,
