@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { SymbolView } from '@/components/symbol-view';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomTabs } from '@/components/bottom-tabs';
 import { useProduct, type VocabularyStatus } from '@/lib/product-store';
@@ -9,26 +9,46 @@ import { productTheme } from '@/constants/product-theme';
 import { exportAnkiDeck } from '@/lib/anki-exporter';
 import { speakEnglish } from '@/lib/speech';
 
-type Filter = 'Tout' | 'À apprendre' | 'Connu';
+type Tab = 'all' | 'phrases' | 'due' | 'learning' | 'known';
 
 export default function WordsScreen() {
   const product = useProduct();
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<Filter>('Tout');
+  const [tab, setTab] = useState<Tab>('all');
 
   const vocabulary = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
+    const now = Date.now();
     return product.vocabulary.filter((item) => {
       const matchesQuery =
         !normalized ||
         item.term.includes(normalized) ||
         item.translation.toLocaleLowerCase().includes(normalized);
-      const matchesFilter =
-        filter === 'Tout' ||
-        (filter === 'Connu' ? item.status === 4 : item.status < 4);
-      return matchesQuery && matchesFilter;
+      if (!matchesQuery) return false;
+      if (tab === 'phrases') return item.term.includes(' ');
+      if (tab === 'due') return new Date(item.nextReview).getTime() <= now && item.status < 4;
+      if (tab === 'learning') return item.status < 4;
+      if (tab === 'known') return item.status === 4;
+      return true;
     });
-  }, [filter, product.vocabulary, query]);
+  }, [tab, product.vocabulary, query]);
+
+  const deleteWord = (id: string, term: string) => {
+    Alert.alert('Supprimer', `Supprimer « ${term} » du vocabulaire ?`, [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Supprimer', style: 'destructive', onPress: () => product.deleteVocabularyEntry(id) },
+    ]);
+  };
+
+  const exportCsv = async () => {
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const rows = [
+      ['Terme', 'Sens', 'Contexte', 'Statut'],
+      ...vocabulary.map((w) => [w.term, w.translation, w.context ?? '', String(w.status)]),
+    ];
+    const csv = rows.map((r) => r.map(escape).join(',')).join('\n');
+    await Share.share({ message: csv, title: 'yapro-vocabulaire.csv' });
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -40,6 +60,13 @@ export default function WordsScreen() {
           <Text style={styles.title}>Vocabulaire</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Exporter en CSV"
+            onPress={() => void exportCsv()}
+            style={styles.headerButton}>
+            <SymbolView name="square.and.arrow.up" tintColor={productTheme.ink} size={18} />
+          </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Trouver une leçon pour ajouter du vocabulaire"
@@ -60,22 +87,22 @@ export default function WordsScreen() {
           style={styles.searchInput}
         />
       </View>
-      <View style={styles.filterRow}>
-        {(['Tout', 'À apprendre', 'Connu'] as const).map((item) => (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+        {([['all', 'Tout'], ['phrases', 'Phrases'], ['due', 'SRS'], ['learning', 'À apprendre'], ['known', 'Connu']] as [Tab, string][]).map(([value, label]) => (
           <Pressable
-            key={item}
+            key={value}
             accessibilityRole="button"
-            accessibilityLabel={`Filtrer par ${item}`}
-            accessibilityState={{ selected: filter === item }}
-            onPress={() => setFilter(item)}
-            style={[styles.filterButton, filter === item && styles.filterActive]}>
-            <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item}</Text>
+            accessibilityLabel={`Filtrer par ${label}`}
+            accessibilityState={{ selected: tab === value }}
+            onPress={() => setTab(value)}
+            style={[styles.filterButton, tab === value && styles.filterActive]}>
+            <Text style={[styles.filterText, tab === value && styles.filterTextActive]}>{label}</Text>
           </Pressable>
         ))}
         <Text style={styles.count}>
           {vocabulary.length} {vocabulary.length > 1 ? 'mots' : 'mot'}
         </Text>
-      </View>
+      </ScrollView>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {vocabulary.length ? (
@@ -94,6 +121,13 @@ export default function WordsScreen() {
                       onPress={() => speakEnglish(item.term, { rate: product.preferences.speechRate })}
                       style={styles.audioButton}>
                       <SymbolView name="speaker.wave.2.fill" tintColor={productTheme.blue} size={19} />
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Supprimer ${item.term}`}
+                      onPress={() => deleteWord(item.id, item.term)}
+                      style={styles.deleteButton}>
+                      <SymbolView name="trash" tintColor={productTheme.red} size={16} />
                     </Pressable>
                   </View>
                   <Text numberOfLines={2} style={styles.context}>{item.context}</Text>
@@ -331,6 +365,14 @@ const styles = StyleSheet.create({
     backgroundColor: productTheme.bluePale,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FEE2E2',
   },
   context: {
     marginTop: 13,

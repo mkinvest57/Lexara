@@ -90,6 +90,7 @@ type Action =
   | { type: 'finishOnboarding'; payload: Partial<LearnerProfile> }
   | { type: 'addLesson'; payload: Lesson }
   | { type: 'saveWord'; payload: VocabularyEntry }
+  | { type: 'deleteVocabularyEntry'; payload: string }
   | { type: 'setVocabularyStatus'; payload: { id: string; status: VocabularyStatus } }
   | { type: 'gradeReview'; payload: { id: string; grade: 'again' | 'hard' | 'good' } }
   | { type: 'togglePlaylist'; payload: string }
@@ -239,6 +240,8 @@ function reducer(state: ProductState, action: Action): ProductState {
             : item,
         ),
       };
+    case 'deleteVocabularyEntry':
+      return { ...state, vocabulary: state.vocabulary.filter((item) => item.id !== action.payload) };
     case 'gradeReview': {
       const now = new Date();
       const activity = recordActivity(state);
@@ -334,6 +337,7 @@ type ProductContextValue = ProductState & {
   importLesson(input: { title: string; content: string; level?: string; sourceUrl?: string }): Lesson;
   saveWord(input: { term: string; translation?: string; context: string; lessonId: string }): void;
   setVocabularyStatus(id: string, status: VocabularyStatus): void;
+  deleteVocabularyEntry(id: string): void;
   gradeReview(id: string, grade: 'again' | 'hard' | 'good'): void;
   togglePlaylist(id: string): void;
   updateLessonProgress(
@@ -501,6 +505,7 @@ export function ProductStoreProvider({ children }: PropsWithChildren) {
       saveWord,
       setVocabularyStatus: (id, status) =>
         dispatch({ type: 'setVocabularyStatus', payload: { id, status } }),
+      deleteVocabularyEntry: (id) => dispatch({ type: 'deleteVocabularyEntry', payload: id }),
       gradeReview: (id, grade) => dispatch({ type: 'gradeReview', payload: { id, grade } }),
       togglePlaylist: (id) => dispatch({ type: 'togglePlaylist', payload: id }),
       removeFromPlaylist: (id) => dispatch({ type: 'togglePlaylist', payload: id }),
