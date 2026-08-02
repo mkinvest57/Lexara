@@ -59,6 +59,7 @@ export default function LessonScreen() {
   const [fontSize, setFontSize] = useState(() => Math.round(18 * (product.preferences.readerFontScale ?? 1)));
   const [sentenceTrs, setSentenceTrs] = useState<Record<string, string>>({});
   const [vocabOpen, setVocabOpen] = useState(false);
+  const [karaokeCharIdx, setKaraokeCharIdx] = useState(-1);
   const progressRef = useRef(product.progress);
   const updateProgressRef = useRef(product.updateLessonProgress);
   const listeningStartedAtRef = useRef<number | null>(null);
@@ -85,6 +86,22 @@ export default function LessonScreen() {
     () => pages[currentPage]?.sentences ?? [],
     [pages, currentPage],
   );
+
+  const tokenRanges = useMemo(() => {
+    let pos = 0;
+    return tokens.map((t) => {
+      const prefix = t.leadingSpace ? 1 : 0;
+      const start = pos + prefix;
+      const end = start + t.raw.length - 1;
+      pos += prefix + t.raw.length;
+      return { start, end };
+    });
+  }, [tokens]);
+
+  const karaokeTokenIdx = useMemo(() => {
+    if (karaokeCharIdx < 0) return -1;
+    return tokenRanges.findIndex((r) => karaokeCharIdx >= r.start && karaokeCharIdx <= r.end);
+  }, [karaokeCharIdx, tokenRanges]);
 
   const lessonStats = useMemo(() => {
     const allTokens = tokenizeLesson(lesson?.content ?? '');
@@ -160,6 +177,27 @@ export default function LessonScreen() {
     setAudioLoading(false);
     setPlaying(false);
   }, [flushListening]);
+
+  useEffect(() => {
+    if (readingMode !== 'karaoke') {
+      setKaraokeCharIdx(-1);
+      return;
+    }
+    setKaraokeCharIdx(-1);
+    const pageText = tokens.map((t) => (t.leadingSpace ? ' ' : '') + t.raw).join('');
+    void speakEnglish(pageText, {
+      language: lesson?.language || product.profile.targetLanguage || 'en',
+      rate: product.preferences.speechRate,
+      onBoundary: (e: { charIndex: number }) => setKaraokeCharIdx(e.charIndex),
+      onDone: () => setKaraokeCharIdx(-1),
+      onStopped: () => setKaraokeCharIdx(-1),
+      onError: () => setKaraokeCharIdx(-1),
+    });
+    return () => {
+      void stopSpeech();
+      setKaraokeCharIdx(-1);
+    };
+  }, [readingMode, currentPage]);
 
   useEffect(() => {
     const lessonId = lesson?.id;
@@ -458,9 +496,10 @@ export default function LessonScreen() {
               styles.readerText,
               { fontSize, lineHeight: Math.round(fontSize * 1.94) },
             ]}>
-            {tokens.map((token) => {
+            {tokens.map((token, idx) => {
               const saved = savedTerms.get(token.normalized);
               const isClickable = Boolean(token.normalized) && !punctuationOnly.test(token.raw);
+              const isKaraoke = readingMode === 'karaoke' && idx === karaokeTokenIdx;
               return (
                 <Text key={token.id}>
                   {token.leadingSpace ? ' ' : ''}
@@ -468,16 +507,18 @@ export default function LessonScreen() {
                     accessibilityRole={isClickable ? 'button' : undefined}
                     onPress={isClickable ? () => openWord(token) : undefined}
                     style={
-                      !isClickable
-                        ? undefined
-                        : [
-                            styles.word,
-                            saved?.status === 4
-                              ? styles.wordKnown
-                              : saved
-                                ? styles.wordSaved
-                                : styles.wordNew,
-                          ]
+                      isKaraoke
+                        ? [styles.word, styles.wordKaraoke]
+                        : !isClickable
+                          ? undefined
+                          : [
+                              styles.word,
+                              saved?.status === 4
+                                ? styles.wordKnown
+                                : saved
+                                  ? styles.wordSaved
+                                  : styles.wordNew,
+                            ]
                     }>
                     {token.raw}
                   </Text>
@@ -1116,6 +1157,11 @@ const styles = StyleSheet.create({
   },
   wordKnown: {
     backgroundColor: 'transparent',
+  },
+  wordKaraoke: {
+    backgroundColor: '#FFDD57',
+    color: '#1a1000',
+    borderRadius: 3,
   },
   finishButton: {
     minHeight: 48,
