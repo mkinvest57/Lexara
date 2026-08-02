@@ -61,11 +61,11 @@ export default function SettingsScreen() {
             <View style={styles.group}>
               <SettingSwitch
                 label="Rappel quotidien"
-                copy="Conserver un rythme d’apprentissage"
+                copy="Conserver un rythme d'apprentissage"
                 value={product.preferences.dailyReminder}
                 onChange={(value) => product.updatePreferences({ dailyReminder: value })}
               />
-              <SettingLink label="Objectif journalier" value={`${product.profile.dailyMinutes} min`} onPress={() => router.push(‘/stats’)} />
+              <SettingLink label="Objectif journalier" value={`${product.profile.dailyMinutes} min`} onPress={() => router.push('/stats')} />
             </View>
             <SectionTitle>PARCOURS & STOCKAGE</SectionTitle>
             <View style={styles.group}>
@@ -73,11 +73,11 @@ export default function SettingsScreen() {
                 label="Vider le cache de stockage"
                 value="Nettoyer (430 ko)"
                 onPress={() => {
-                  alert("Le cache de stockage de l’application a été vidé avec succès.");
+                  alert("Le cache de stockage de l'application a été vidé avec succès.");
                 }}
               />
               <SettingLink
-                label="Recommencer l’onboarding"
+                label="Recommencer l'onboarding"
                 value=""
                 destructive
                 onPress={() => {
@@ -143,7 +143,7 @@ export default function SettingsScreen() {
             <View style={styles.group}>
               <SettingSwitch
                 label="Lecture automatique"
-                copy="Lire le texte à l’ouverture"
+                copy="Lire le texte à l'ouverture"
                 value={product.preferences.autoplayAudio}
                 onChange={(value) => product.updatePreferences({ autoplayAudio: value })}
               />
