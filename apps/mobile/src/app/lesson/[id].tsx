@@ -54,6 +54,10 @@ export default function LessonScreen() {
   const [seen, setSeen] = useState<Set<string>>(() => new Set());
   const [sentenceIdx, setSentenceIdx] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
+  const [readingMode, setReadingMode] = useState<'read' | 'sentence' | 'karaoke'>('read');
+  const [fontTools, setFontTools] = useState(false);
+  const [fontSize, setFontSize] = useState(() => Math.round(18 * (product.preferences.readerFontScale ?? 1)));
+  const [sentenceTrs, setSentenceTrs] = useState<Record<string, string>>({});
   const progressRef = useRef(product.progress);
   const updateProgressRef = useRef(product.updateLessonProgress);
   const listeningStartedAtRef = useRef<number | null>(null);
@@ -76,6 +80,11 @@ export default function LessonScreen() {
     () => new Map(product.vocabulary.map((item) => [item.normalizedTerm, item])),
     [product.vocabulary],
   );
+  const pageSentences = useMemo(
+    () => pages[currentPage]?.sentences ?? [],
+    [pages, currentPage],
+  );
+
   const lessonStats = useMemo(() => {
     const allTokens = tokenizeLesson(lesson?.content ?? '');
     const unique = new Set(allTokens.map((t) => t.normalized).filter(Boolean));
@@ -319,6 +328,26 @@ export default function LessonScreen() {
         <View style={styles.topProgress}>
           <View style={[styles.topProgressFill, { width: `${Math.max(3, progress * 100)}%` }]} />
         </View>
+        {/* Mode switcher */}
+        <View style={styles.modeSwitcher}>
+          {([['read', 'doc.text', 'Lecture'], ['sentence', 'text.justify', 'Phrase'], ['karaoke', 'waveform', 'Karaoké']] as const).map(([mode, icon, label]) => (
+            <Pressable
+              key={mode}
+              accessibilityRole="button"
+              accessibilityLabel={label}
+              onPress={() => { setReadingMode(mode); setSentenceIdx(0); }}
+              style={[styles.modeButton, readingMode === mode && styles.modeButtonActive]}>
+              <SymbolView name={icon as never} tintColor={readingMode === mode ? '#FFFFFF' : productTheme.inkSoft} size={13} />
+            </Pressable>
+          ))}
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Taille du texte"
+          onPress={() => setFontTools((v) => !v)}
+          style={[styles.topButton, fontTools && styles.topButtonActive]}>
+          <SymbolView name="textformat.size" tintColor={productTheme.ink} size={18} />
+        </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Aimer cette leçon"
@@ -338,6 +367,19 @@ export default function LessonScreen() {
           <SymbolView name="ellipsis" tintColor={productTheme.ink} size={21} />
         </Pressable>
       </View>
+
+      {fontTools && (
+        <View style={styles.fontToolbar}>
+          <Text style={styles.fontToolbarLabel}>Taille du texte</Text>
+          <Pressable onPress={() => setFontSize((s) => Math.max(14, s - 1))} style={styles.fontStepButton}>
+            <Text style={styles.fontStepText}>−</Text>
+          </Pressable>
+          <Text style={styles.fontSizeValue}>{fontSize}</Text>
+          <Pressable onPress={() => setFontSize((s) => Math.min(28, s + 1))} style={styles.fontStepButton}>
+            <Text style={styles.fontStepText}>+</Text>
+          </Pressable>
+        </View>
+      )}
 
       <View style={styles.statsRow}>
         <View style={styles.statBadge}>
@@ -364,55 +406,88 @@ export default function LessonScreen() {
         </View>
       </View>
 
-      <GestureDetector gesture={swipeGesture}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.reader, { paddingBottom: 142 + insets.bottom }]}>
-        <Text
-          style={[
-            styles.readerText,
-            {
-              fontSize: 18 * product.preferences.readerFontScale,
-              lineHeight: 35 * product.preferences.readerFontScale,
-            },
-          ]}>
-          {tokens.map((token) => {
-            const saved = savedTerms.get(token.normalized);
-            const isClickable = Boolean(token.normalized) && !punctuationOnly.test(token.raw);
-            return (
-              <Text key={token.id}>
-                {token.leadingSpace ? ' ' : ''}
-                <Text
-                  accessibilityRole={isClickable ? 'button' : undefined}
-                  onPress={isClickable ? () => openWord(token) : undefined}
-                  style={
-                    !isClickable
-                      ? undefined
-                      : [
-                          styles.word,
-                          saved?.status === 4
-                            ? styles.wordKnown
-                            : saved
-                              ? styles.wordSaved
-                              : styles.wordNew,
-                        ]
-                  }>
-                  {token.raw}
+      {readingMode === 'sentence' ? (
+        <SentenceModeCard
+          sentences={pageSentences}
+          sentenceIdx={sentenceIdx}
+          savedTerms={savedTerms}
+          fontSize={fontSize}
+          translation={sentenceTrs[`${currentPage}-${sentenceIdx}`]}
+          translating={phraseLoading && phraseOpen}
+          onTokenPress={openWord}
+          onPrev={() => {
+            if (sentenceIdx > 0) setSentenceIdx((i) => i - 1);
+            else if (currentPage > 0) { setCurrentPage((p) => p - 1); setSentenceIdx((pages[currentPage - 1]?.sentences.length ?? 1) - 1); }
+          }}
+          onNext={() => {
+            if (sentenceIdx < pageSentences.length - 1) setSentenceIdx((i) => i + 1);
+            else if (currentPage < pages.length - 1) { setCurrentPage((p) => p + 1); setSentenceIdx(0); }
+            else completeLesson();
+          }}
+          onTranslate={async () => {
+            const key = `${currentPage}-${sentenceIdx}`;
+            if (sentenceTrs[key]) { setSentenceTrs((t) => { const n = { ...t }; delete n[key]; return n; }); return; }
+            const src = pageSentences[sentenceIdx]?.text ?? '';
+            setPhraseLoading(true);
+            setPhraseOpen(true);
+            try {
+              const tr = await translateEnglishToFrench(src);
+              setSentenceTrs((t) => ({ ...t, [key]: tr }));
+            } catch { /* silent */ } finally { setPhraseLoading(false); setPhraseOpen(false); }
+          }}
+          canPrev={sentenceIdx > 0 || currentPage > 0}
+          canNext={sentenceIdx < pageSentences.length - 1 || currentPage < pages.length - 1}
+          isLast={sentenceIdx === pageSentences.length - 1 && currentPage === pages.length - 1}
+          insets={insets}
+        />
+      ) : (
+        <GestureDetector gesture={swipeGesture}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.reader, { paddingBottom: 142 + insets.bottom }]}>
+          <Text
+            style={[
+              styles.readerText,
+              { fontSize, lineHeight: Math.round(fontSize * 1.94) },
+            ]}>
+            {tokens.map((token) => {
+              const saved = savedTerms.get(token.normalized);
+              const isClickable = Boolean(token.normalized) && !punctuationOnly.test(token.raw);
+              return (
+                <Text key={token.id}>
+                  {token.leadingSpace ? ' ' : ''}
+                  <Text
+                    accessibilityRole={isClickable ? 'button' : undefined}
+                    onPress={isClickable ? () => openWord(token) : undefined}
+                    style={
+                      !isClickable
+                        ? undefined
+                        : [
+                            styles.word,
+                            saved?.status === 4
+                              ? styles.wordKnown
+                              : saved
+                                ? styles.wordSaved
+                                : styles.wordNew,
+                          ]
+                    }>
+                    {token.raw}
+                  </Text>
                 </Text>
-              </Text>
-            );
-          })}
-        </Text>
+              );
+            })}
+          </Text>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Terminer la leçon"
-          onPress={completeLesson}
-          style={({ pressed }) => [styles.finishButton, pressed && styles.pressed]}>
-          <Text style={styles.finishText}>Terminer la leçon</Text>
-        </Pressable>
-      </ScrollView>
-      </GestureDetector>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Terminer la leçon"
+            onPress={completeLesson}
+            style={({ pressed }) => [styles.finishButton, pressed && styles.pressed]}>
+            <Text style={styles.finishText}>Terminer la leçon</Text>
+          </Pressable>
+        </ScrollView>
+        </GestureDetector>
+      )}
 
       <View style={[styles.readerFooter, { paddingBottom: Math.max(10, insets.bottom) }]}>
         {pages.length > 1 && (
@@ -777,6 +852,113 @@ function MenuRow({ symbol, label, onPress }: { symbol: string; label: string; on
       <Text style={styles.menuRowText}>{label}</Text>
       <SymbolView name="chevron.right" tintColor={productTheme.muted} size={15} />
     </Pressable>
+  );
+}
+
+function SentenceModeCard({
+  sentences,
+  sentenceIdx,
+  savedTerms,
+  fontSize,
+  translation,
+  translating,
+  onTokenPress,
+  onPrev,
+  onNext,
+  onTranslate,
+  canPrev,
+  canNext,
+  isLast,
+  insets,
+}: {
+  sentences: import('@yapro/core').SplitSentence[];
+  sentenceIdx: number;
+  savedTerms: Map<string, { status: number; translation?: string }>;
+  fontSize: number;
+  translation?: string;
+  translating: boolean;
+  onTokenPress: (token: ReaderToken) => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onTranslate: () => void;
+  canPrev: boolean;
+  canNext: boolean;
+  isLast: boolean;
+  insets: { bottom: number };
+}) {
+  const sentence = sentences[sentenceIdx];
+  if (!sentence) return null;
+  const tokens = tokenizeLesson(sentence.text);
+  const trKey = translation !== undefined;
+
+  return (
+    <View style={styles.sentenceMode}>
+      {/* Counter + dots */}
+      <View style={styles.sentenceCounter}>
+        <Text style={styles.sentenceCounterText}>{sentenceIdx + 1} / {sentences.length}</Text>
+        <View style={styles.sentenceDots}>
+          {sentences.slice(0, Math.min(sentences.length, 12)).map((_, i) => (
+            <View key={i} style={[styles.sentenceDot, i === sentenceIdx && styles.sentenceDotActive]} />
+          ))}
+        </View>
+      </View>
+
+      {/* Sentence card */}
+      <View style={styles.sentenceCard}>
+        <Text style={[styles.readerText, { fontSize, lineHeight: Math.round(fontSize * 1.94), textAlign: 'center' }]}>
+          {tokens.map((token) => {
+            const saved = savedTerms.get(token.normalized);
+            const isClickable = Boolean(token.normalized) && !/^[^a-zA-Z]+$/.test(token.raw);
+            return (
+              <Text key={token.id}>
+                {token.leadingSpace ? ' ' : ''}
+                <Text
+                  accessibilityRole={isClickable ? 'button' : undefined}
+                  onPress={isClickable ? () => onTokenPress(token) : undefined}
+                  style={!isClickable ? undefined : [
+                    styles.word,
+                    saved?.status === 4 ? styles.wordKnown : saved ? styles.wordSaved : styles.wordNew,
+                  ]}>
+                  {token.raw}
+                </Text>
+              </Text>
+            );
+          })}
+        </Text>
+        {trKey && (
+          <Text style={styles.sentenceTranslation}>"{translation}"</Text>
+        )}
+      </View>
+
+      {/* Nav buttons */}
+      <View style={[styles.sentenceNavRow, { paddingBottom: Math.max(12, insets.bottom) + 140 }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Phrase précédente"
+          disabled={!canPrev}
+          onPress={onPrev}
+          style={[styles.sentenceNavButton, !canPrev && styles.sentenceNavDisabled]}>
+          <SymbolView name="chevron.left" tintColor={canPrev ? productTheme.blue : productTheme.mutedLight} size={16} />
+          <Text style={[styles.sentenceNavText, !canPrev && styles.sentenceNavTextDim]}>Précédent</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={trKey ? 'Masquer la traduction' : translating ? 'Traduction en cours' : 'Traduire'}
+          onPress={onTranslate}
+          style={styles.sentenceTranslateButton}>
+          <SymbolView name="globe" tintColor={productTheme.inkSoft} size={15} />
+          <Text style={styles.sentenceNavText}>{trKey ? 'Masquer' : translating ? '…' : 'Traduire'}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={isLast ? 'Terminer la leçon' : 'Phrase suivante'}
+          onPress={onNext}
+          style={styles.sentenceNextButton}>
+          <Text style={styles.sentenceNextText}>{isLast ? 'Terminer' : 'Suivant'}</Text>
+          <SymbolView name={isLast ? 'checkmark' : 'chevron.right'} tintColor="#FFFFFF" size={14} />
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -1317,5 +1499,172 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.67,
+  },
+  modeSwitcher: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: productTheme.line,
+    borderRadius: 20,
+    backgroundColor: productTheme.background,
+    padding: 2,
+    gap: 1,
+  },
+  modeButton: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+  },
+  modeButtonActive: {
+    backgroundColor: productTheme.ink,
+  },
+  topButtonActive: {
+    backgroundColor: productTheme.background,
+  },
+  fontToolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    minHeight: 48,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: productTheme.line,
+    backgroundColor: productTheme.background,
+  },
+  fontToolbarLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: productTheme.inkSoft,
+  },
+  fontStepButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: productTheme.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: productTheme.surface,
+  },
+  fontStepText: {
+    fontSize: 20,
+    fontWeight: '300',
+    color: productTheme.ink,
+    lineHeight: 24,
+  },
+  fontSizeValue: {
+    width: 28,
+    textAlign: 'center',
+    fontSize: 15,
+    fontWeight: '800',
+    color: productTheme.ink,
+  },
+  sentenceMode: {
+    flex: 1,
+    paddingHorizontal: 18,
+    paddingTop: 10,
+  },
+  sentenceCounter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  sentenceCounterText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: productTheme.muted,
+  },
+  sentenceDots: {
+    flexDirection: 'row',
+    gap: 4,
+    flexWrap: 'wrap',
+    maxWidth: 180,
+    justifyContent: 'flex-end',
+  },
+  sentenceDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: productTheme.line,
+  },
+  sentenceDotActive: {
+    backgroundColor: productTheme.ink,
+  },
+  sentenceCard: {
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: productTheme.line,
+    backgroundColor: productTheme.surface,
+    alignItems: 'center',
+  },
+  sentenceTranslation: {
+    marginTop: 14,
+    fontSize: 15,
+    lineHeight: 21,
+    color: productTheme.inkSoft,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  sentenceNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 16,
+  },
+  sentenceNavButton: {
+    flex: 1,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: productTheme.line,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  sentenceNavDisabled: {
+    opacity: 0.35,
+  },
+  sentenceNavText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: productTheme.inkSoft,
+  },
+  sentenceNavTextDim: {
+    color: productTheme.mutedLight,
+  },
+  sentenceTranslateButton: {
+    flex: 1,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: productTheme.line,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: productTheme.background,
+  },
+  sentenceNextButton: {
+    flex: 1,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: productTheme.ink,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  sentenceNextText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });
