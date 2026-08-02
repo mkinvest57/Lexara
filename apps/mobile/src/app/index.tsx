@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { SymbolView } from '@/components/symbol-view';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomTabs } from '@/components/bottom-tabs';
 import { LanguageHeader } from '@/components/language-header';
@@ -21,6 +21,31 @@ export default function LibraryHomeScreen() {
   const product = useProduct();
   const [miniStoryFilter, setMiniStoryFilter] =
     useState<(typeof miniStoryFilters)[number]>('Tout');
+  const [search, setSearch] = useState('');
+
+  const inProgress = useMemo(
+    () =>
+      product.lessons
+        .filter((l) => (product.progress[l.id]?.progress ?? 0) > 0)
+        .sort((a, b) => (product.progress[b.id]?.progress ?? 0) - (product.progress[a.id]?.progress ?? 0))
+        .slice(0, 20),
+    [product.lessons, product.progress],
+  );
+
+  const queued = useMemo(
+    () => product.lessons.filter((l) => product.playlistIds.includes(l.id)).slice(0, 20),
+    [product.lessons, product.playlistIds],
+  );
+
+  const searchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return [];
+    return product.lessons.filter((l) =>
+      `${l.title} ${l.collection ?? ''} ${l.kind}`.toLowerCase().includes(q),
+    );
+  }, [product.lessons, search]);
+
+  const searching = Boolean(search.trim());
 
   useEffect(() => {
     if (!product.onboardingCompleted) router.replace('/onboarding');
@@ -38,10 +63,54 @@ export default function LibraryHomeScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <LanguageHeader />
+      <View style={styles.searchWrap}>
+        <SymbolView name="magnifyingglass" tintColor={productTheme.muted} size={15} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Rechercher une leçon…"
+          placeholderTextColor={productTheme.muted}
+          value={search}
+          onChangeText={setSearch}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+          autoCorrect={false}
+          accessibilityLabel="Rechercher une leçon"
+        />
+      </View>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled>
+        {searching ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {searchResults.length} résultat{searchResults.length !== 1 ? 's' : ''}
+            </Text>
+            {searchResults.length === 0 ? (
+              <Text style={styles.emptySearch}>Aucune leçon ne correspond.</Text>
+            ) : (
+              <View style={styles.searchGrid}>
+                {searchResults.map((lesson) => (
+                  <LessonCard
+                    key={lesson.id}
+                    lesson={lesson}
+                    savedWords={savedByLesson[lesson.id] ?? 0}
+                    knownWords={product.vocabulary.filter(
+                      (item) => item.lessonId === lesson.id && item.status === 4,
+                    ).length}
+                    progress={product.progress[lesson.id]?.progress}
+                    inPlaylist={product.playlistIds.includes(lesson.id)}
+                    onTogglePlaylist={() => product.togglePlaylist(lesson.id)}
+                    onPress={() =>
+                      router.push({ pathname: '/lesson/[id]', params: { id: lesson.id } })
+                    }
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        ) : (
+          <>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Ouvrir les statistiques"
@@ -85,6 +154,64 @@ export default function LibraryHomeScreen() {
               <Text style={styles.quickReviewBadgeText}>Réviser</Text>
             </View>
           </Pressable>
+        )}
+
+        {inProgress.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Continuer à étudier</Text>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.rail}>
+              {inProgress.map((lesson) => (
+                <LessonCard
+                  key={lesson.id}
+                  lesson={lesson}
+                  savedWords={savedByLesson[lesson.id] ?? 0}
+                  knownWords={product.vocabulary.filter(
+                    (item) => item.lessonId === lesson.id && item.status === 4,
+                  ).length}
+                  progress={product.progress[lesson.id]?.progress}
+                  inPlaylist={product.playlistIds.includes(lesson.id)}
+                  onTogglePlaylist={() => product.togglePlaylist(lesson.id)}
+                  onPress={() =>
+                    router.push({ pathname: '/lesson/[id]', params: { id: lesson.id } })
+                  }
+                />
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {queued.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Ma liste</Text>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.rail}>
+              {queued.map((lesson) => (
+                <LessonCard
+                  key={lesson.id}
+                  lesson={lesson}
+                  savedWords={savedByLesson[lesson.id] ?? 0}
+                  knownWords={product.vocabulary.filter(
+                    (item) => item.lessonId === lesson.id && item.status === 4,
+                  ).length}
+                  progress={product.progress[lesson.id]?.progress}
+                  inPlaylist={product.playlistIds.includes(lesson.id)}
+                  onTogglePlaylist={() => product.togglePlaylist(lesson.id)}
+                  onPress={() =>
+                    router.push({ pathname: '/lesson/[id]', params: { id: lesson.id } })
+                  }
+                />
+              ))}
+            </ScrollView>
+          </View>
         )}
 
         {sections.map((section) => {
@@ -160,6 +287,8 @@ export default function LibraryHomeScreen() {
             </View>
           );
         })}
+          </>
+        )}
       </ScrollView>
 
       <View style={styles.quickActions}>
@@ -366,5 +495,35 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.68,
+  },
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    paddingHorizontal: 14,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: productTheme.background,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: productTheme.ink,
+  },
+  emptySearch: {
+    paddingVertical: 48,
+    textAlign: 'center',
+    fontSize: 15,
+    color: productTheme.muted,
+  },
+  searchGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    gap: 14,
+    marginTop: 16,
   },
 });
